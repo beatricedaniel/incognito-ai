@@ -1,0 +1,85 @@
+[project]
+name = "incognito-ai"
+version = "0.1.0"
+description = "100% local PII anonymizer for French admin/medical PDFs"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pymupdf",
+    "httpx",
+    "pydantic>=2",
+]
+
+[project.scripts]
+incognito = "incognito.main:run"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-socket",
+    "ruff",
+    "mypy",
+    "pip-audit",
+    "detect-secrets",
+    "hypothesis",
+    "syrupy",
+    "import-linter",
+    "cyclonedx-bom",
+    "httpx",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W", "I", "N", "UP", "S", "B", "A", "C4", "C90",
+    "PT", "ANN", "SIM", "TID", "PL", "RUF",
+]
+ignore = ["ANN101", "ANN102"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "PLR2004"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 5
+max-locals = 12
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow",
+    "eval: F1 evaluation corpus",
+    "ollama: requires running Ollama",
+]
+
+[tool.coverage.run]
+source = ["src/incognito"]
+
+[tool.mypy]
+strict = true
+packages = ["incognito"]
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = ["fitz", "fitz.*"]
+ignore_missing_imports = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/incognito"]
