@@ -57,9 +57,10 @@ Bar: senior Python, indistinguishable from human.
 - Python + API JSON: `snake_case`. JS: `camelCase`. CSS/DOM: `kebab-case`. SSE events: `snake_case`.
 - No camelCase transformation at API boundary — JS consumes snake_case as-is.
 
-## API surface (6 endpoints)
+## API surface (7 endpoints)
 - `GET /api/status`, `POST /api/upload`, `GET /api/events/{session_id}`
 - `GET /api/detections/{session_id}`, `DELETE /api/detections/{session_id}/{id}`, `POST /api/redact/{session_id}`
+- `POST /api/recover`
 
 ## Frontend state machine
 idle → uploading → processing → reviewing → redacting → complete. Any → error. Error/complete → idle.
