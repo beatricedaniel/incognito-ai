@@ -23,3 +23,11 @@ class OllamaError(IncognitoError):
 
 class SessionError(IncognitoError):
     pass
+
+
+class KeyfileError(IncognitoError):
+    pass
+
+
+class RecoveryError(IncognitoError):
+    pass

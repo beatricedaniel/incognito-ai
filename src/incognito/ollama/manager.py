@@ -5,12 +5,20 @@ from typing import Final
 
 import httpx
 
-from incognito.core.config import OLLAMA_BASE_URL, OLLAMA_MODEL
+from incognito.core.config import OLLAMA_BASE_URL, OLLAMA_HOST, OLLAMA_MODEL
 from incognito.core.exceptions import OllamaError
 
 logger: Final = logging.getLogger(__name__)
 
 _TIMEOUT: Final[float] = 120.0
+
+
+def _enforce_localhost() -> None:
+    if OLLAMA_HOST != "127.0.0.1":
+        raise OllamaError(f"OLLAMA_HOST must be 127.0.0.1, got {OLLAMA_HOST}")
+
+
+_enforce_localhost()
 
 
 def check_ready() -> bool:
