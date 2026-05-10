@@ -19,4 +19,6 @@ TEMP_DIR_PERMISSIONS: Final[int] = 0o700
 
 SESSION_TIMEOUT_SECONDS: Final[int] = int(os.environ.get("INCOGNITO_SESSION_TIMEOUT", "1800"))
 
+MAX_UPLOAD_BYTES: Final[int] = 50 * 1024 * 1024
+
 STATIC_DIR: Final[Path] = Path(__file__).resolve().parent.parent / "static"
