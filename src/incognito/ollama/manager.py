@@ -31,15 +31,23 @@ def check_ready() -> bool:
         return False
 
 
-def generate(prompt: str) -> str:
+def generate(prompt: str, system: str = "") -> str:
+    payload: dict[str, object] = {
+        "model": OLLAMA_MODEL,
+        "prompt": prompt,
+        "stream": False,
+    }
+    if system:
+        payload["system"] = system
+
     try:
         resp = httpx.post(
             f"{OLLAMA_BASE_URL}/api/generate",
-            json={"model": OLLAMA_MODEL, "prompt": prompt, "stream": False},
+            json=payload,
             timeout=_TIMEOUT,
         )
         resp.raise_for_status()
         result: str = resp.json().get("response", "")
-        return result
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         raise OllamaError("Ollama inference request failed") from exc
+    return result
