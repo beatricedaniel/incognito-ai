@@ -38,12 +38,11 @@ def _parse_response(response: str) -> list[RawDetection]:
 
     try:
         data = json.loads(response)
-    except json.JSONDecodeError:
-        logger.warning("Failed to parse NER response as JSON")
-        return []
+    except json.JSONDecodeError as exc:
+        raise DetectionError("NER response was not valid JSON") from exc
 
     if not isinstance(data, list):
-        return []
+        raise DetectionError("NER response was not a JSON array")
 
     detections: list[RawDetection] = []
     for item in data:

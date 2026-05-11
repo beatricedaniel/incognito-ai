@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+import asyncio
 import logging
+import queue
 from collections.abc import AsyncIterator
 from typing import Final
 
 from fastapi import APIRouter, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
-from incognito.core.config import MAX_UPLOAD_BYTES, OLLAMA_MODEL
+from incognito.api.events import run_pipeline
+from incognito.core.config import MAX_UPLOAD_BYTES, OLLAMA_MODEL, SSE_QUEUE_TIMEOUT_SECONDS
 from incognito.core.exceptions import PdfError, SessionError
 from incognito.core.sessions import create_session, get_session
 from incognito.core.tempfiles import TempFileManager
+from incognito.models import SessionState
 from incognito.ollama.manager import check_ready
 from incognito.pipeline.extractor import validate_pdf
 
@@ -59,14 +63,42 @@ async def upload_pdf(file: UploadFile) -> dict[str, str]:
 @router.get("/events/{session_id}")
 async def events(session_id: str) -> StreamingResponse:
     try:
-        get_session(session_id)
+        session = get_session(session_id)
     except SessionError:
         raise HTTPException(status_code=404, detail="Session not found") from None
 
-    async def _stream() -> AsyncIterator[str]:
-        yield ""
+    if session.state != SessionState.UPLOADING:
+        raise HTTPException(status_code=409, detail="Pipeline already started")
 
-    return StreamingResponse(_stream(), media_type="text/event-stream")
+    event_queue: queue.Queue[str | None] = queue.Queue()
+
+    async def _stream() -> AsyncIterator[str]:
+        loop = asyncio.get_running_loop()
+        pipeline_task = loop.run_in_executor(None, run_pipeline, session, event_queue)
+        try:
+            yield ": connected\n\n"
+            while True:
+                try:
+                    event = await asyncio.to_thread(
+                        event_queue.get,
+                        timeout=SSE_QUEUE_TIMEOUT_SECONDS,
+                    )
+                except queue.Empty:
+                    if pipeline_task.done():
+                        break
+                    yield ": keepalive\n\n"
+                    continue
+                if event is None:
+                    break
+                yield event
+        finally:
+            await pipeline_task
+
+    return StreamingResponse(
+        _stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.get("/detections/{session_id}")
