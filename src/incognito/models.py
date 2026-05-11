@@ -35,6 +35,9 @@ class RawDetection(BaseModel, frozen=True):
     entity_type: EntityType
     start: int
     end: int
+    page: int
+    bbox: BBox
+    block_index: int
 
 
 class Detection(BaseModel):
