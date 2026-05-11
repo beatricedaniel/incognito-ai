@@ -37,3 +37,6 @@ data/
 docs/
 .claude/
 _bmad*/
+
+# Evaluation corpus — PDFs contain real PII, JSON annotations reference it
+tests/evaluation/corpus/
