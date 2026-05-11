@@ -12,6 +12,10 @@ from incognito.core.exceptions import PdfError, SessionError
 from incognito.core.sessions import create_session, get_session
 from incognito.core.tempfiles import TempFileManager
 from incognito.ollama.manager import check_ready
+from incognito.pipeline.extractor import validate_pdf
+
+_PDF_MAGIC: Final = b"%PDF-"
+_ACCEPTED_CONTENT_TYPES: Final = frozenset({"application/pdf", "application/octet-stream"})
 
 router: Final = APIRouter(prefix="/api")
 logger: Final = logging.getLogger(__name__)
@@ -24,22 +28,29 @@ def status() -> dict[str, object]:
 
 @router.post("/upload", status_code=201)
 async def upload_pdf(file: UploadFile) -> dict[str, str]:
-    if file.content_type != "application/pdf":
-        raise PdfError("Expected a PDF file")
+    if file.content_type not in _ACCEPTED_CONTENT_TYPES:
+        raise PdfError("Only PDF files are supported")
 
     pdf_bytes = await file.read()
     if len(pdf_bytes) > MAX_UPLOAD_BYTES:
         raise PdfError("File exceeds maximum size")
 
-    temp = TempFileManager()
-    pdf_path = temp.create_file("upload.pdf")
-    pdf_path.write_bytes(pdf_bytes)
+    if file.content_type == "application/octet-stream" and not pdf_bytes[:5] == _PDF_MAGIC:
+        raise PdfError("Only PDF files are supported")
 
-    session = create_session(
-        pdf_path=pdf_path,
-        original_pdf_bytes=pdf_bytes,
-        temp=temp,
-    )
+    temp = TempFileManager()
+    try:
+        pdf_path = temp.create_file("upload.pdf")
+        pdf_path.write_bytes(pdf_bytes)
+        validate_pdf(pdf_path)
+        session = create_session(
+            pdf_path=pdf_path,
+            original_pdf_bytes=pdf_bytes,
+            temp=temp,
+        )
+    except Exception:
+        temp.cleanup()
+        raise
 
     logger.info("Session %s created", session.id)
     return {"session_id": session.id, "events_url": f"/api/events/{session.id}"}

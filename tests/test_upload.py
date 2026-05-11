@@ -20,7 +20,8 @@ from incognito.core.sessions import get_session
 
 def _make_pdf() -> bytes:
     doc = fitz.open()
-    doc.new_page()
+    page = doc.new_page()
+    page.insert_text((72, 72), "Sample text for testing.")
     b = doc.tobytes()
     doc.close()
     return b

@@ -26,8 +26,8 @@ def create_app() -> FastAPI:
     async def handle_incognito_error(request: Request, exc: IncognitoError) -> JSONResponse:
         logger.error("%s: %s", type(exc).__name__, exc)
         return JSONResponse(
-            status_code=500,
-            content={"error": type(exc).__name__, "detail": str(exc)},
+            status_code=exc.status_code,
+            content={"error": exc.error, "detail": exc.detail},
         )
 
     app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
