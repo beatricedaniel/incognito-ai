@@ -19,4 +19,11 @@ TEMP_DIR_PERMISSIONS: Final[int] = 0o700
 
 SESSION_TIMEOUT_SECONDS: Final[int] = int(os.environ.get("INCOGNITO_SESSION_TIMEOUT", "1800"))
 
+MAX_UPLOAD_BYTES: Final[int] = 50 * 1024 * 1024
+
+STAGE_EXTRACTING: Final[str] = "extracting"
+STAGE_DETECTING: Final[str] = "detecting"
+STAGE_VALIDATING: Final[str] = "validating"
+SSE_QUEUE_TIMEOUT_SECONDS: Final[float] = 30.0
+
 STATIC_DIR: Final[Path] = Path(__file__).resolve().parent.parent / "static"

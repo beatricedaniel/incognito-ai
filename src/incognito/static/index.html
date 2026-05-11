@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Incognito</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Incognito</h1>
+      <p class="tagline">Anonymisez vos documents PDF en toute confidentialit&eacute;</p>
+    </header>
+
+    <section id="status-bar" aria-live="polite">
+      <span class="badge badge-local">100% local &mdash; aucune donn&eacute;e ne quitte votre machine</span>
+    </section>
+
+    <section id="drop-zone" role="button" tabindex="0"
+             aria-label="D&eacute;posez un PDF ici ou cliquez pour s&eacute;lectionner">
+      <p id="drop-zone-label" class="drop-zone-label">D&eacute;posez un PDF ici</p>
+      <p class="drop-zone-hint">ou cliquez pour s&eacute;lectionner un fichier</p>
+      <input type="file" id="file-input" accept=".pdf,application/pdf"
+             class="visually-hidden" aria-hidden="true">
+    </section>
+
+    <p id="error-message" role="alert" aria-live="assertive" hidden></p>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
