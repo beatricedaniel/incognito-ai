@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 
 from incognito.api.events import run_pipeline
 from incognito.core.config import MAX_UPLOAD_BYTES, OLLAMA_MODEL, SSE_QUEUE_TIMEOUT_SECONDS
-from incognito.core.exceptions import PdfError
+from incognito.core.exceptions import DetectionNotFoundError, PdfError
 from incognito.core.sessions import create_session, get_session
 from incognito.core.tempfiles import TempFileManager
 from incognito.models import SessionState
@@ -111,7 +111,17 @@ async def get_detections(session_id: str) -> dict[str, object]:
 
 @router.delete("/detections/{session_id}/{detection_id}")
 async def dismiss_detection(session_id: str, detection_id: str) -> dict[str, str]:
-    raise NotImplementedError
+    session = get_session(session_id)
+
+    if session.state in {SessionState.UPLOADING, SessionState.PROCESSING}:
+        raise HTTPException(status_code=409, detail="Pipeline not yet complete")
+
+    for det in session.detections:
+        if det.id == detection_id:
+            det.dismissed = True
+            return {"status": "dismissed"}
+
+    raise DetectionNotFoundError(f"Detection {detection_id} not in session")
 
 
 @router.post("/redact/{session_id}")

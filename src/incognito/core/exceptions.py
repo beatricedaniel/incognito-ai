@@ -21,6 +21,11 @@ class DetectionError(IncognitoError):
     pass
 
 
+class DetectionNotFoundError(IncognitoError):
+    status_code: int = 404
+    error: str = "Detection not found"
+
+
 class RedactionError(IncognitoError):
     pass
 
