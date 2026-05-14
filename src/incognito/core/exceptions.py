@@ -30,7 +30,8 @@ class OllamaError(IncognitoError):
 
 
 class SessionError(IncognitoError):
-    pass
+    status_code: int = 404
+    error: str = "Session not found"
 
 
 class KeyfileError(IncognitoError):

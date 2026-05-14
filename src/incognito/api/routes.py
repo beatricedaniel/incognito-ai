@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 
 from incognito.api.events import run_pipeline
 from incognito.core.config import MAX_UPLOAD_BYTES, OLLAMA_MODEL, SSE_QUEUE_TIMEOUT_SECONDS
-from incognito.core.exceptions import PdfError, SessionError
+from incognito.core.exceptions import PdfError
 from incognito.core.sessions import create_session, get_session
 from incognito.core.tempfiles import TempFileManager
 from incognito.models import SessionState
@@ -62,10 +62,7 @@ async def upload_pdf(file: UploadFile) -> dict[str, str]:
 
 @router.get("/events/{session_id}")
 async def events(session_id: str) -> StreamingResponse:
-    try:
-        session = get_session(session_id)
-    except SessionError:
-        raise HTTPException(status_code=404, detail="Session not found") from None
+    session = get_session(session_id)
 
     if session.state != SessionState.UPLOADING:
         raise HTTPException(status_code=409, detail="Pipeline already started")
@@ -103,7 +100,13 @@ async def events(session_id: str) -> StreamingResponse:
 
 @router.get("/detections/{session_id}")
 async def get_detections(session_id: str) -> dict[str, object]:
-    raise NotImplementedError
+    session = get_session(session_id)
+
+    if session.state in {SessionState.UPLOADING, SessionState.PROCESSING}:
+        raise HTTPException(status_code=409, detail="Pipeline not yet complete")
+
+    sorted_detections = sorted(session.detections, key=lambda d: (d.page, d.start))
+    return {"detections": [d.model_dump() for d in sorted_detections]}
 
 
 @router.delete("/detections/{session_id}/{detection_id}")
