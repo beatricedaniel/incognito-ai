@@ -159,6 +159,10 @@ main.reviewing--active {
 
 /* — Review panel — */
 
+#review-panel[hidden] {
+  display: none;
+}
+
 #review-panel {
   width: 100%;
   display: flex;
@@ -344,6 +348,104 @@ main.reviewing--active {
   font-size: 0.9rem;
   text-align: center;
   padding: 2rem;
+}
+
+/* — Redact bar — */
+
+#redact-bar {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+
+#redact-button {
+  background: #2d6a4f;
+  color: #d8f3dc;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7em 2em;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+#redact-button:hover {
+  background: #3a8563;
+}
+
+#redact-button:focus-visible {
+  outline: 2px solid #6db3f2;
+  outline-offset: 2px;
+}
+
+#redact-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes pulse-opacity {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.85; }
+}
+
+#redact-button.redacting {
+  animation: pulse-opacity 1.2s ease-in-out infinite;
+}
+
+/* — Complete panel — */
+
+#complete-panel[hidden] {
+  display: none;
+}
+
+#complete-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(45, 106, 79, 0.1);
+  border: 1px solid rgba(45, 106, 79, 0.3);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+}
+
+#complete-message {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #d8f3dc;
+}
+
+#download-link {
+  display: inline-block;
+  background: #1d3557;
+  color: #a8dadc;
+  padding: 0.5em 1.5em;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+#download-link:hover {
+  background: #274b75;
+}
+
+#reset-button {
+  background: #333;
+  color: #e0e0e0;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6em 1.5em;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#reset-button:hover {
+  background: #444;
 }
 
 /* — Focus — */

@@ -23,6 +23,11 @@ var fileInput = document.getElementById("file-input");
 var statusBar = document.getElementById("status-bar");
 var errorEl = document.getElementById("error-message");
 var reviewPanel = document.getElementById("review-panel");
+var redactButton = document.getElementById("redact-button");
+var completePanel = document.getElementById("complete-panel");
+var completeMessage = document.getElementById("complete-message");
+var downloadLink = document.getElementById("download-link");
+var resetButton = document.getElementById("reset-button");
 
 // — State machine —
 
@@ -32,9 +37,12 @@ function transition(next) {
 }
 
 function render() {
+  var reviewing = currentState === State.REVIEWING || currentState === State.REDACTING;
+
   errorEl.hidden = currentState !== State.ERROR;
-  reviewPanel.hidden = currentState !== State.REVIEWING;
-  dropZone.hidden = currentState === State.REVIEWING;
+  reviewPanel.hidden = !reviewing;
+  completePanel.hidden = currentState !== State.COMPLETE;
+  dropZone.hidden = reviewing || currentState === State.COMPLETE;
 
   if (currentState === State.IDLE) {
     dropLabel.textContent = "Déposez un PDF ici";
@@ -53,14 +61,23 @@ function render() {
     dropZone.classList.remove("drop-zone--disabled");
   }
 
+  redactButton.disabled = currentState !== State.REVIEWING;
+  if (currentState === State.REDACTING) {
+    redactButton.textContent = "Anonymisation en cours\u2026";
+    redactButton.classList.add("redacting");
+  } else {
+    redactButton.textContent = "Anonymiser";
+    redactButton.classList.remove("redacting");
+  }
+
   document.querySelector("main").classList.toggle(
-    "reviewing--active", currentState === State.REVIEWING
+    "reviewing--active", reviewing
   );
 
   if (currentState === State.REVIEWING) {
     if (window.PdfPreview) window.PdfPreview.init(sessionId);
     if (window.DetectionSidebar) window.DetectionSidebar.init(sessionId);
-  } else {
+  } else if (currentState !== State.REDACTING) {
     if (window.PdfPreview) window.PdfPreview.destroy();
     if (window.DetectionSidebar) window.DetectionSidebar.destroy();
   }
@@ -209,6 +226,50 @@ function connectEvents(url) {
 
 window.addEventListener("beforeunload", function () {
   if (eventSource) eventSource.close();
+});
+
+// — Redact —
+
+redactButton.addEventListener("click", function () {
+  if (currentState !== State.REVIEWING) return;
+  transition(State.REDACTING);
+
+  fetch("/api/redact/" + sessionId, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({mode: "irreversible"})
+  })
+    .then(function (resp) {
+      if (!resp.ok) return resp.json().then(function (err) { throw err; });
+      var cd = resp.headers.get("content-disposition") || "";
+      var match = cd.match(/filename="?([^"]+)"?/);
+      var filename = match ? match[1] : "redacted.pdf";
+      return resp.blob().then(function (blob) {
+        return {blob: blob, filename: filename};
+      });
+    })
+    .then(function (result) {
+      var url = URL.createObjectURL(result.blob);
+      downloadLink.href = url;
+      downloadLink.download = result.filename;
+      downloadLink.textContent = result.filename;
+      downloadLink.hidden = false;
+      completeMessage.textContent = "Anonymisation termin\u00e9e.";
+      transition(State.COMPLETE);
+      downloadLink.click();
+    })
+    .catch(function (err) {
+      showError(err.detail || "Erreur lors de l\u2019anonymisation.");
+    });
+});
+
+// — Reset —
+
+resetButton.addEventListener("click", function () {
+  if (downloadLink.href) URL.revokeObjectURL(downloadLink.href);
+  downloadLink.hidden = true;
+  sessionId = null;
+  transition(State.IDLE);
 });
 
 // — Error —
