@@ -36,6 +36,7 @@ htmlcov/
 data/
 docs/
 .claude/
+.mcp.json
 _bmad*/
 
 # Evaluation corpus — PDFs contain real PII, JSON annotations reference it
