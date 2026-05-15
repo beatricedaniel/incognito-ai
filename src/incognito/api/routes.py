@@ -3,12 +3,16 @@ from __future__ import annotations
 import asyncio
 import logging
 import queue
+import re
 import time
+import unicodedata
 from collections.abc import AsyncIterator
+from pathlib import Path
 from typing import Final
 
 from fastapi import APIRouter, HTTPException, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
+from starlette.background import BackgroundTask
 
 from incognito.api.events import run_pipeline
 from incognito.core.config import (
@@ -23,7 +27,7 @@ from incognito.core.exceptions import (
     PdfError,
     RedactionError,
 )
-from incognito.core.sessions import create_session, get_session
+from incognito.core.sessions import create_session, delete_session, get_session
 from incognito.core.tempfiles import TempFileManager
 from incognito.models import RedactionMode, RedactRequest, SessionState
 from incognito.ollama.manager import check_ready
@@ -33,9 +37,22 @@ from incognito.pipeline.redactor import redact_pdf
 
 _PDF_MAGIC: Final = b"%PDF-"
 _ACCEPTED_CONTENT_TYPES: Final = frozenset({"application/pdf", "application/octet-stream"})
+_UNSAFE_CHARS: Final = re.compile(r"[^\w\s\-.]")
+_MAX_FILENAME_LEN: Final = 200
 
 router: Final = APIRouter(prefix="/api")
 logger: Final = logging.getLogger(__name__)
+
+
+def _build_download_filename(original: str) -> str:
+    if not original:
+        return "redacted.pdf"
+    stem = Path(original).stem
+    stem = unicodedata.normalize("NFKC", stem)
+    stem = _UNSAFE_CHARS.sub("", stem).strip()
+    if not stem:
+        return "redacted.pdf"
+    return f"{stem[:_MAX_FILENAME_LEN]}_redacted.pdf"
 
 
 @router.get("/status")
@@ -63,6 +80,7 @@ async def upload_pdf(file: UploadFile) -> dict[str, str]:
         session = create_session(
             pdf_path=pdf_path,
             original_pdf_bytes=pdf_bytes,
+            original_filename=file.filename or "",
             temp=temp,
         )
     except Exception:
@@ -180,10 +198,13 @@ async def redact(session_id: str, body: RedactRequest | None = None) -> FileResp
     session.state = SessionState.COMPLETE
     session.updated_at = time.time()
 
+    download_name = _build_download_filename(session.original_filename)
+
     return FileResponse(
         path=output_path,
         media_type="application/pdf",
-        filename="redacted.pdf",
+        filename=download_name,
+        background=BackgroundTask(delete_session, session_id),
     )
 
 

@@ -20,6 +20,7 @@ class Session:
     state: SessionState
     pdf_path: Path | None = None
     original_pdf_bytes: bytes = b""
+    original_filename: str = ""
     temp: TempFileManager | None = None
     detections: list[Detection] = field(default_factory=list)
     created_at: float = field(default_factory=time.time)
@@ -30,6 +31,7 @@ def create_session(
     *,
     pdf_path: Path,
     original_pdf_bytes: bytes,
+    original_filename: str,
     temp: TempFileManager,
 ) -> Session:
     sid = uuid.uuid4().hex
@@ -38,6 +40,7 @@ def create_session(
         state=SessionState.UPLOADING,
         pdf_path=pdf_path,
         original_pdf_bytes=original_pdf_bytes,
+        original_filename=original_filename,
         temp=temp,
     )
     _sessions[sid] = session

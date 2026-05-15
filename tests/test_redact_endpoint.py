@@ -340,7 +340,7 @@ async def test_redact_filters_out_dismissed_detections(client: AsyncClient) -> N
 
 
 @pytest.mark.asyncio
-async def test_redact_sets_state_to_complete(client: AsyncClient) -> None:
+async def test_redact_cleans_up_session_on_success(client: AsyncClient) -> None:
     session, _ = _reviewing_session_with_pdf()
     _sessions_module._sessions[session.id] = session
 
@@ -350,7 +350,7 @@ async def test_redact_sets_state_to_complete(client: AsyncClient) -> None:
     )
 
     assert resp.status_code == 200
-    assert _sessions_module._sessions[session.id].state == SessionState.COMPLETE
+    assert session.id not in _sessions_module._sessions
 
 
 # ---------------------------------------------------------------------------

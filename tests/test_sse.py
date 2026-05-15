@@ -121,6 +121,7 @@ def uploading_session() -> tuple[str, Path]:
     session = create_session(
         pdf_path=pdf_path,
         original_pdf_bytes=pdf_bytes,
+        original_filename="upload.pdf",
         temp=temp,
     )
     return session.id, pdf_path
