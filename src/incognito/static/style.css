@@ -130,6 +130,25 @@ h1 {
   max-width: 100%;
 }
 
+/* — Review panel — */
+
+#review-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#ai-disclaimer {
+  font-size: 0.9rem;
+  color: #e9c46a;
+  background: rgba(233, 196, 106, 0.08);
+  border: 1px solid rgba(233, 196, 106, 0.25);
+  border-radius: 8px;
+  padding: 0.75em 1em;
+  text-align: center;
+}
+
 /* — Focus — */
 
 :focus-visible {

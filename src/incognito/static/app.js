@@ -22,6 +22,7 @@ var dropHint = document.querySelector(".drop-zone-hint");
 var fileInput = document.getElementById("file-input");
 var statusBar = document.getElementById("status-bar");
 var errorEl = document.getElementById("error-message");
+var reviewPanel = document.getElementById("review-panel");
 
 // — State machine —
 
@@ -32,6 +33,8 @@ function transition(next) {
 
 function render() {
   errorEl.hidden = currentState !== State.ERROR;
+  reviewPanel.hidden = currentState !== State.REVIEWING;
+  dropZone.hidden = currentState === State.REVIEWING;
 
   if (currentState === State.IDLE) {
     dropLabel.textContent = "Déposez un PDF ici";
@@ -174,7 +177,6 @@ function connectEvents(url) {
     source.close();
     eventSource = null;
     transition(State.REVIEWING);
-    dropLabel.textContent = "Analyse terminée";
   });
 
   source.addEventListener("pipeline_error", function (e) {
