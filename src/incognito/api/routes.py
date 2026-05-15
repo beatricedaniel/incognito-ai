@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Final
 
 from fastapi import APIRouter, HTTPException, UploadFile
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from starlette.background import BackgroundTask
 
 from incognito.api.events import run_pipeline
@@ -126,6 +126,23 @@ async def events(session_id: str) -> StreamingResponse:
         _stream(),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@router.get("/pdf/{session_id}")
+async def get_pdf(session_id: str) -> Response:
+    session = get_session(session_id)
+
+    if session.state in {SessionState.UPLOADING, SessionState.PROCESSING}:
+        raise HTTPException(status_code=409, detail="Pipeline not yet complete")
+
+    if not session.original_pdf_bytes:
+        raise HTTPException(status_code=404, detail="PDF not available")
+
+    return Response(
+        content=session.original_pdf_bytes,
+        media_type="application/pdf",
+        headers={"Cache-Control": "no-store"},
     )
 
 

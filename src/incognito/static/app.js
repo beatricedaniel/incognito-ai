@@ -52,6 +52,16 @@ function render() {
     dropHint.hidden = false;
     dropZone.classList.remove("drop-zone--disabled");
   }
+
+  document.querySelector("main").classList.toggle(
+    "reviewing--active", currentState === State.REVIEWING
+  );
+
+  if (currentState === State.REVIEWING && window.PdfPreview) {
+    window.PdfPreview.init(sessionId);
+  } else if (window.PdfPreview) {
+    window.PdfPreview.destroy();
+  }
 }
 
 // — Status polling —

@@ -117,7 +117,7 @@ def test_all_seven_routes_registered(app: FastAPI) -> None:
         assert (method, path) in registered, f"{method} {path} not registered"
 
 
-def test_exactly_seven_api_routes(app: FastAPI) -> None:
+def test_exactly_eight_api_routes(app: FastAPI) -> None:
     api_routes: list[tuple[str, str]] = []
     for route in app.routes:
         path = getattr(route, "path", None)
@@ -125,7 +125,7 @@ def test_exactly_seven_api_routes(app: FastAPI) -> None:
         if path and methods and path.startswith("/api/"):
             for method in methods:
                 api_routes.append((method.upper(), path))
-    assert len(api_routes) == 7, f"Expected 7 API routes, found {len(api_routes)}: {api_routes}"
+    assert len(api_routes) == 8, f"Expected 8 API routes, found {len(api_routes)}: {api_routes}"
 
 
 def test_events_route_registered(app: FastAPI) -> None:
