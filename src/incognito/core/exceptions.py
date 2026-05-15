@@ -30,6 +30,11 @@ class RedactionError(IncognitoError):
     pass
 
 
+class PassphraseError(IncognitoError):
+    status_code: int = 400
+    error: str = "Invalid passphrase"
+
+
 class OllamaError(IncognitoError):
     pass
 

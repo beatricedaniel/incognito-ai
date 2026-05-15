@@ -3,20 +3,33 @@ from __future__ import annotations
 import asyncio
 import logging
 import queue
+import time
 from collections.abc import AsyncIterator
 from typing import Final
 
 from fastapi import APIRouter, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from incognito.api.events import run_pipeline
-from incognito.core.config import MAX_UPLOAD_BYTES, OLLAMA_MODEL, SSE_QUEUE_TIMEOUT_SECONDS
-from incognito.core.exceptions import DetectionNotFoundError, PdfError
+from incognito.core.config import (
+    MAX_UPLOAD_BYTES,
+    OLLAMA_MODEL,
+    PASSPHRASE_MIN_LENGTH,
+    SSE_QUEUE_TIMEOUT_SECONDS,
+)
+from incognito.core.exceptions import (
+    DetectionNotFoundError,
+    PassphraseError,
+    PdfError,
+    RedactionError,
+)
 from incognito.core.sessions import create_session, get_session
 from incognito.core.tempfiles import TempFileManager
-from incognito.models import SessionState
+from incognito.models import RedactionMode, RedactRequest, SessionState
 from incognito.ollama.manager import check_ready
 from incognito.pipeline.extractor import validate_pdf
+from incognito.pipeline.keyfile import embed as keyfile_embed
+from incognito.pipeline.redactor import redact_pdf
 
 _PDF_MAGIC: Final = b"%PDF-"
 _ACCEPTED_CONTENT_TYPES: Final = frozenset({"application/pdf", "application/octet-stream"})
@@ -125,8 +138,53 @@ async def dismiss_detection(session_id: str, detection_id: str) -> dict[str, str
 
 
 @router.post("/redact/{session_id}")
-async def redact(session_id: str) -> dict[str, str]:
-    raise NotImplementedError
+async def redact(session_id: str, body: RedactRequest | None = None) -> FileResponse:
+    session = get_session(session_id)
+
+    if session.state != SessionState.REVIEWING:
+        raise HTTPException(status_code=409, detail="Session not in reviewing state")
+
+    active = [d for d in session.detections if not d.dismissed]
+    if not active:
+        raise HTTPException(status_code=409, detail="No detections to redact")
+
+    request = body if body is not None else RedactRequest()
+
+    if request.mode == RedactionMode.REVERSIBLE and (
+        not request.passphrase or len(request.passphrase) < PASSPHRASE_MIN_LENGTH
+    ):
+        raise PassphraseError(f"Passphrase must be at least {PASSPHRASE_MIN_LENGTH} characters")
+
+    if session.pdf_path is None or session.temp is None:
+        raise RedactionError("Session is missing PDF data")
+
+    session.state = SessionState.REDACTING
+    session.updated_at = time.time()
+
+    try:
+        output_path = session.temp.create_file("redacted.pdf")
+        redact_pdf(session.pdf_path, active, output_path)
+    except Exception:
+        session.state = SessionState.ERROR
+        session.updated_at = time.time()
+        raise
+
+    if request.mode == RedactionMode.REVERSIBLE:
+        try:
+            keyfile_embed(output_path, session.original_pdf_bytes, request.passphrase)  # type: ignore[arg-type]
+        except NotImplementedError:
+            session.state = SessionState.ERROR
+            session.updated_at = time.time()
+            raise RedactionError("Reversible redaction is not yet available") from None
+
+    session.state = SessionState.COMPLETE
+    session.updated_at = time.time()
+
+    return FileResponse(
+        path=output_path,
+        media_type="application/pdf",
+        filename="redacted.pdf",
+    )
 
 
 @router.post("/recover")

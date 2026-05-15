@@ -26,4 +26,6 @@ STAGE_DETECTING: Final[str] = "detecting"
 STAGE_VALIDATING: Final[str] = "validating"
 SSE_QUEUE_TIMEOUT_SECONDS: Final[float] = 30.0
 
+PASSPHRASE_MIN_LENGTH: Final[int] = 12
+
 STATIC_DIR: Final[Path] = Path(__file__).resolve().parent.parent / "static"

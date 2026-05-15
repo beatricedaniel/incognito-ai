@@ -52,6 +52,16 @@ class Detection(BaseModel):
     dismissed: bool = False
 
 
+class RedactionMode(enum.StrEnum):
+    IRREVERSIBLE = "irreversible"
+    REVERSIBLE = "reversible"
+
+
+class RedactRequest(BaseModel):
+    mode: RedactionMode = RedactionMode.IRREVERSIBLE
+    passphrase: str | None = None
+
+
 class SessionState(enum.StrEnum):
     UPLOADING = "uploading"
     PROCESSING = "processing"
