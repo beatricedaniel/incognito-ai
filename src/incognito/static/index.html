@@ -30,12 +30,16 @@
         La d&eacute;tection IA peut manquer certaines entit&eacute;s.
         V&eacute;rifiez attentivement toutes les d&eacute;tections avant de proc&eacute;der &agrave; l&rsquo;anonymisation.
       </p>
-      <div id="pdf-preview-container" class="pdf-preview-container"></div>
+      <div class="review-layout">
+        <aside id="detection-sidebar" aria-label="Liste des d&eacute;tections"></aside>
+        <div id="pdf-preview-container" class="pdf-preview-container"></div>
+      </div>
     </section>
 
     <p id="error-message" role="alert" aria-live="assertive" hidden></p>
   </main>
   <script src="/app.js"></script>
   <script type="module" src="/js/preview.js"></script>
+  <script src="/js/sidebar.js"></script>
 </body>
 </html>

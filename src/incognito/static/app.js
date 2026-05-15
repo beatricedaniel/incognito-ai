@@ -57,10 +57,12 @@ function render() {
     "reviewing--active", currentState === State.REVIEWING
   );
 
-  if (currentState === State.REVIEWING && window.PdfPreview) {
-    window.PdfPreview.init(sessionId);
-  } else if (window.PdfPreview) {
-    window.PdfPreview.destroy();
+  if (currentState === State.REVIEWING) {
+    if (window.PdfPreview) window.PdfPreview.init(sessionId);
+    if (window.DetectionSidebar) window.DetectionSidebar.init(sessionId);
+  } else {
+    if (window.PdfPreview) window.PdfPreview.destroy();
+    if (window.DetectionSidebar) window.DetectionSidebar.destroy();
   }
 }
 

@@ -137,7 +137,24 @@ h1 {
 /* — Review layout — */
 
 main.reviewing--active {
-  max-width: 900px;
+  max-width: 1200px;
+}
+
+.review-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .review-layout {
+    grid-template-columns: 1fr;
+  }
+
+  #detection-sidebar {
+    max-height: 40vh;
+  }
 }
 
 /* — Review panel — */
@@ -157,6 +174,132 @@ main.reviewing--active {
   border-radius: 8px;
   padding: 0.75em 1em;
   text-align: center;
+}
+
+/* — Detection sidebar — */
+
+#detection-sidebar {
+  overflow-y: auto;
+  max-height: 70vh;
+  background: #16213e;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.sidebar-summary {
+  margin-bottom: 1rem;
+}
+
+.sidebar-summary-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  margin-bottom: 0.5rem;
+}
+
+.summary-counts {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.sidebar-page-heading {
+  font-size: 0.8rem;
+  color: #a0a0b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.25rem;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.detection-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detection-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+  color: #e0e0e0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.detection-item:hover {
+  background: rgba(109, 179, 242, 0.08);
+  border-color: #333;
+}
+
+.detection-item .badge {
+  font-size: 0.7rem;
+  padding: 0.15em 0.55em;
+  flex-shrink: 0;
+}
+
+.detection-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.detection-page {
+  font-size: 0.75rem;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.badge-person {
+  background: #6c3483;
+  color: #e8daef;
+}
+
+.badge-address {
+  background: #1a6e4e;
+  color: #d5f5e3;
+}
+
+.badge-phone {
+  background: #1f618d;
+  color: #d6eaf8;
+}
+
+.badge-email {
+  background: #b9770e;
+  color: #fef9e7;
+}
+
+.badge-unknown {
+  background: #555;
+  color: #ccc;
+}
+
+.sidebar-empty,
+.sidebar-loading,
+.sidebar-error {
+  font-size: 0.9rem;
+  color: #a0a0b8;
+  text-align: center;
+  padding: 1.5rem 0.5rem;
+}
+
+.sidebar-error {
+  color: #e76f51;
 }
 
 /* — PDF preview — */
