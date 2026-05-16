@@ -36,6 +36,7 @@ ARGON2_PARALLELISM: Final[int] = 1
 ARGON2_KEY_LENGTH: Final[int] = 32
 ARGON2_SALT_LENGTH: Final[int] = 16
 AESGCM_NONCE_LENGTH: Final[int] = 12
+MAX_DECOMPRESSED_RECOVERY_BYTES: Final[int] = MAX_UPLOAD_BYTES * 4
 
 STATIC_DIR: Final[Path] = Path(__file__).resolve().parent.parent / "static"
 

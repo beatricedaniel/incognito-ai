@@ -10,7 +10,7 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Final
 
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from starlette.background import BackgroundTask
 
@@ -34,6 +34,7 @@ from incognito.models import RedactionMode, RedactRequest, SessionState
 from incognito.ollama.manager import check_ready
 from incognito.pipeline.extractor import validate_pdf
 from incognito.pipeline.keyfile import embed as keyfile_embed
+from incognito.pipeline.recovery import recover as pipeline_recover
 from incognito.pipeline.redactor import redact_pdf
 
 _PDF_MAGIC: Final = b"%PDF-"
@@ -233,5 +234,45 @@ async def redact(session_id: str, body: RedactRequest | None = None) -> FileResp
 
 
 @router.post("/recover")
-async def recover() -> dict[str, str]:
-    raise NotImplementedError
+async def recover(file: UploadFile, passphrase: str = Form("")) -> FileResponse:
+    if not passphrase:
+        raise HTTPException(status_code=400, detail="Passphrase is required")
+
+    content = await file.read()
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise PdfError("File too large")
+    if not content.startswith(_PDF_MAGIC):
+        raise PdfError("Not a valid PDF file")
+
+    temp = TempFileManager()
+    try:
+        pdfkey_path = temp.create_file("upload.pdfkey")
+        pdfkey_path.write_bytes(content)
+
+        original_bytes = pipeline_recover(pdfkey_path, passphrase)
+
+        recovered_path = temp.create_file("recovered.pdf")
+        recovered_path.write_bytes(original_bytes)
+    except Exception:
+        temp.cleanup()
+        raise
+
+    download_name = _build_recovery_filename(file.filename or "")
+    return FileResponse(
+        path=recovered_path,
+        media_type="application/pdf",
+        filename=download_name,
+        background=BackgroundTask(temp.cleanup),
+    )
+
+
+def _build_recovery_filename(original: str) -> str:
+    if not original:
+        return "recovered.pdf"
+    stem = Path(original).stem
+    stem = _UNSAFE_CHARS.sub("", stem).strip()
+    if stem.endswith("_redacted"):
+        stem = stem[:-9]
+    if not stem:
+        return "recovered.pdf"
+    return f"{stem[:_MAX_FILENAME_LEN]}_recovered.pdf"

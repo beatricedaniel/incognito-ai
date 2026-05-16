@@ -49,7 +49,7 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "PLR2004", "PLC0415", "PT019", "S603", "S607"]
+"tests/**/*.py" = ["S101", "S105", "PLR2004", "PLC0415", "PT019", "S603", "S607"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10

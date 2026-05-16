@@ -49,4 +49,5 @@ class KeyfileError(IncognitoError):
 
 
 class RecoveryError(IncognitoError):
-    pass
+    status_code: int = 422
+    error: str = "Recovery failed"
