@@ -29,3 +29,8 @@ SSE_QUEUE_TIMEOUT_SECONDS: Final[float] = 30.0
 PASSPHRASE_MIN_LENGTH: Final[int] = 12
 
 STATIC_DIR: Final[Path] = Path(__file__).resolve().parent.parent / "static"
+
+GLINER_MODEL: Final[str] = "urchade/gliner_multi-v2.1"
+GLINER_LABELS: Final[tuple[str, ...]] = ("person", "address")
+GLINER_THRESHOLD_PERSON: Final[float] = 0.5
+GLINER_THRESHOLD_ADDRESS: Final[float] = 0.3

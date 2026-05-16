@@ -11,6 +11,9 @@ dependencies = [
     "httpx",
     "pydantic>=2",
     "python-multipart",
+    "gliner",
+    "torch",
+    "transformers",
 ]
 
 [project.scripts]
@@ -75,6 +78,18 @@ mypy_path = "src"
 
 [[tool.mypy.overrides]]
 module = ["fitz", "fitz.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["gliner", "gliner.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["torch", "torch.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["transformers", "transformers.*"]
 ignore_missing_imports = true
 
 [build-system]
