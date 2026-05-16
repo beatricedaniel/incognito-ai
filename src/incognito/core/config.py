@@ -32,8 +32,12 @@ STATIC_DIR: Final[Path] = Path(__file__).resolve().parent.parent / "static"
 
 GLINER_MODEL: Final[str] = "urchade/gliner_multi-v2.1"
 GLINER_LABELS: Final[tuple[str, ...]] = ("person", "address")
-GLINER_THRESHOLD_PERSON: Final[float] = 0.5
-GLINER_THRESHOLD_ADDRESS: Final[float] = 0.3
+GLINER_THRESHOLD_PERSON: Final[float] = float(
+    os.environ.get("INCOGNITO_GLINER_THRESHOLD_PERSON", "0.5")
+)
+GLINER_THRESHOLD_ADDRESS: Final[float] = float(
+    os.environ.get("INCOGNITO_GLINER_THRESHOLD_ADDRESS", "0.3")
+)
 
 GEMMA_CONFIRM_SYSTEM: Final[str] = (
     "You validate PII candidates in French administrative text.\n"
