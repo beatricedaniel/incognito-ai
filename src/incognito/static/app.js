@@ -61,7 +61,8 @@ function render() {
     dropZone.classList.remove("drop-zone--disabled");
   }
 
-  redactButton.disabled = currentState !== State.REVIEWING;
+  redactButton.disabled = currentState !== State.REVIEWING ||
+    (window.ModeToggle && !window.ModeToggle.isValid());
   if (currentState === State.REDACTING) {
     redactButton.textContent = "Anonymisation en cours\u2026";
     redactButton.classList.add("redacting");
@@ -75,9 +76,13 @@ function render() {
   );
 
   if (currentState === State.REVIEWING) {
+    if (window.ModeToggle) window.ModeToggle.init(function () {
+      redactButton.disabled = currentState !== State.REVIEWING || !window.ModeToggle.isValid();
+    });
     if (window.PdfPreview) window.PdfPreview.init(sessionId);
     if (window.DetectionSidebar) window.DetectionSidebar.init(sessionId);
   } else if (currentState !== State.REDACTING) {
+    if (window.ModeToggle) window.ModeToggle.destroy();
     if (window.PdfPreview) window.PdfPreview.destroy();
     if (window.DetectionSidebar) window.DetectionSidebar.destroy();
   }
@@ -234,10 +239,14 @@ redactButton.addEventListener("click", function () {
   if (currentState !== State.REVIEWING) return;
   transition(State.REDACTING);
 
+  var mode = window.ModeToggle ? window.ModeToggle.getMode() : "irreversible";
+  var payload = {mode: mode};
+  if (mode === "reversible") payload.passphrase = window.ModeToggle.getPassphrase();
+
   fetch("/api/redact/" + sessionId, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({mode: "irreversible"})
+    body: JSON.stringify(payload)
   })
     .then(function (resp) {
       if (!resp.ok) return resp.json().then(function (err) { throw err; });

@@ -35,6 +35,36 @@
         <div id="pdf-preview-container" class="pdf-preview-container"></div>
       </div>
       <div id="redact-bar">
+        <fieldset id="mode-selector" class="mode-selector">
+          <legend class="visually-hidden">Mode d'anonymisation</legend>
+          <div class="mode-selector__controls">
+            <label class="mode-option mode-option--active">
+              <input type="radio" name="redact-mode" value="irreversible" checked>
+              <span class="mode-option__label">Irr&eacute;versible</span>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="redact-mode" value="reversible">
+              <span class="mode-option__label">R&eacute;versible</span>
+            </label>
+          </div>
+          <p id="mode-description" class="mode-description" aria-live="polite">
+            Les donn&eacute;es personnelles seront d&eacute;finitivement supprim&eacute;es.
+          </p>
+        </fieldset>
+
+        <div id="passphrase-group" class="passphrase-group" hidden>
+          <label for="passphrase-input" class="passphrase-label">
+            Phrase secr&egrave;te (12 caract&egrave;res minimum)
+          </label>
+          <input type="password" id="passphrase-input" class="passphrase-input"
+                 minlength="12" autocomplete="off"
+                 aria-describedby="passphrase-strength passphrase-hint">
+          <div class="passphrase-meta">
+            <span id="passphrase-strength" class="passphrase-strength" aria-live="polite"></span>
+            <span id="passphrase-hint" class="passphrase-hint" aria-live="assertive"></span>
+          </div>
+        </div>
+
         <button id="redact-button" type="button">Anonymiser</button>
       </div>
     </section>
@@ -50,5 +80,6 @@
   <script src="/app.js"></script>
   <script type="module" src="/js/preview.js"></script>
   <script src="/js/sidebar.js"></script>
+  <script src="/js/mode-toggle.js"></script>
 </body>
 </html>
