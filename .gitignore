@@ -38,6 +38,7 @@ docs/
 .claude/
 .mcp.json
 _bmad*/
+CLAUDE.md
 
 # Evaluation corpus — PDFs contain real PII, JSON annotations reference it
 tests/evaluation/corpus/
