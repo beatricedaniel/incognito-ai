@@ -1,19 +1,16 @@
 from __future__ import annotations
 
-import json
-import textwrap
-from collections.abc import Callable
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from incognito.core.exceptions import DetectionError
-from incognito.models import BBox, EntityType, TextBlock
-from incognito.pipeline.detector import detect
-
-GenerateFn = Callable[[str, str], str]
+from incognito.models import BBox, EntityType, RawDetection, TextBlock
+from incognito.pipeline.detector import GenerateFn, detect
 
 _BBOX = BBox(x=10.0, y=20.0, width=200.0, height=15.0)
+_PAGE_BBOX = BBox(x=0.0, y=0.0, width=595.0, height=842.0)
 
 
 def _block(
@@ -25,136 +22,275 @@ def _block(
     return TextBlock(text=text, page=page, bbox=bbox, block_index=block_index)
 
 
-def _generate_returning(payload: str) -> GenerateFn:
-    def generate_fn(prompt: str, system: str) -> str:
-        return payload
-
-    return generate_fn
-
-
-def test_happy_path_single_block() -> None:
-    block = _block("Jean Dupont habite à Paris.")
-    response = json.dumps([{"text": "Jean Dupont", "entity_type": "person", "start": 0, "end": 11}])
-    result = detect([block], _generate_returning(response))
-
-    assert len(result) == 1
-    det = result[0]
-    assert det.text == "Jean Dupont"
-    assert det.entity_type == EntityType.PERSON
-    assert det.start == 0
-    assert det.end == 11
-    assert det.page == block.page
-    assert det.bbox == block.bbox
-    assert det.block_index == block.block_index
+def _raw_det(  # noqa: PLR0913
+    text: str,
+    entity_type: EntityType = EntityType.PERSON,
+    start: int = 0,
+    end: int | None = None,
+    page: int = 1,
+    block_index: int = 0,
+) -> RawDetection:
+    return RawDetection(
+        text=text,
+        entity_type=entity_type,
+        start=start,
+        end=end if end is not None else len(text),
+        page=page,
+        bbox=_BBOX,
+        block_index=block_index,
+    )
 
 
-def test_multiple_blocks_inherit_correct_metadata() -> None:
-    bbox_a = BBox(x=0.0, y=0.0, width=100.0, height=10.0)
-    bbox_b = BBox(x=5.0, y=50.0, width=150.0, height=12.0)
-    block_a = _block("Marie Martin.", page=1, block_index=0, bbox=bbox_a)
-    block_b = _block("0612345678", page=2, block_index=3, bbox=bbox_b)
+def _noop_generate(prompt: str, system: str = "") -> str:
+    return ""
 
-    responses = [
-        json.dumps([{"text": "Marie Martin", "entity_type": "person", "start": 0, "end": 12}]),
-        json.dumps([{"text": "0612345678", "entity_type": "phone", "start": 0, "end": 10}]),
-    ]
-    call_count = 0
 
-    def generate_fn(prompt: str, system: str) -> str:
-        nonlocal call_count
-        r = responses[call_count]
-        call_count += 1
-        return r
+# ---------------------------------------------------------------------------
+# Orchestration order and delegation
+# ---------------------------------------------------------------------------
 
-    result = detect([block_a, block_b], generate_fn)
 
+def test_detect_calls_all_four_sub_functions_in_order() -> None:
+    blocks = [_block("Jean Dupont")]
+    regex_result: list[RawDetection] = []
+    gliner_result: list[RawDetection] = [_raw_det("Jean Dupont")]
+    dedup_result = regex_result + gliner_result
+    confirmed: list[RawDetection] = [_raw_det("Jean Dupont")]
+
+    call_order: list[str] = []
+
+    def tracking_regex(b: list[TextBlock]) -> list[RawDetection]:
+        call_order.append("regex")
+        return regex_result
+
+    def tracking_gliner(b: list[TextBlock]) -> list[RawDetection]:
+        call_order.append("gliner")
+        return gliner_result
+
+    def tracking_dedup(r: list[RawDetection], g: list[RawDetection]) -> list[RawDetection]:
+        call_order.append("dedup")
+        return dedup_result
+
+    def tracking_confirm(
+        b: list[TextBlock], c: list[RawDetection], g: GenerateFn
+    ) -> list[RawDetection]:
+        call_order.append("confirm")
+        return confirmed
+
+    with (
+        patch("incognito.pipeline.detector.detect_regex", tracking_regex),
+        patch("incognito.pipeline.detector.detect_gliner", tracking_gliner),
+        patch("incognito.pipeline.detector.deduplicate", tracking_dedup),
+        patch("incognito.pipeline.detector.confirm_candidates", tracking_confirm),
+    ):
+        detect(blocks, _noop_generate)
+
+    assert call_order == ["regex", "gliner", "dedup", "confirm"]
+
+
+# ---------------------------------------------------------------------------
+# Regex detections bypass Gemma confirmation
+# ---------------------------------------------------------------------------
+
+
+def test_regex_detections_not_sent_to_confirm() -> None:
+    blocks = [_block("jean@example.com")]
+    regex_det = _raw_det("jean@example.com", EntityType.EMAIL, end=16)
+    dedup_result = [regex_det]  # only regex, no GLiNER survivors
+
+    confirm_mock = MagicMock(return_value=[])
+
+    with (
+        patch("incognito.pipeline.detector.detect_regex", return_value=[regex_det]),
+        patch("incognito.pipeline.detector.detect_gliner", return_value=[]),
+        patch("incognito.pipeline.detector.deduplicate", return_value=dedup_result),
+        patch("incognito.pipeline.detector.confirm_candidates", confirm_mock),
+    ):
+        result = detect(blocks, _noop_generate)
+
+    # confirm_candidates must receive an empty candidate list
+    candidates_arg = confirm_mock.call_args[0][1]
+    assert candidates_arg == []
+    assert regex_det in result
+
+
+# ---------------------------------------------------------------------------
+# GLiNER detections go through confirmation
+# ---------------------------------------------------------------------------
+
+
+def test_gliner_detections_sent_to_confirm() -> None:
+    blocks = [_block("Marie Martin habite à Lyon.")]
+    gliner_det = _raw_det("Marie Martin", EntityType.PERSON, end=12)
+    dedup_result = [gliner_det]  # no regex, one GLiNER survivor
+    confirmed = [gliner_det]
+
+    confirm_mock = MagicMock(return_value=confirmed)
+
+    with (
+        patch("incognito.pipeline.detector.detect_regex", return_value=[]),
+        patch("incognito.pipeline.detector.detect_gliner", return_value=[gliner_det]),
+        patch("incognito.pipeline.detector.deduplicate", return_value=dedup_result),
+        patch("incognito.pipeline.detector.confirm_candidates", confirm_mock),
+    ):
+        result = detect(blocks, _noop_generate)
+
+    candidates_arg = confirm_mock.call_args[0][1]
+    assert gliner_det in candidates_arg
+    assert gliner_det in result
+
+
+# ---------------------------------------------------------------------------
+# Dedup removes GLiNER candidates overlapping with regex
+# ---------------------------------------------------------------------------
+
+
+def test_dedup_called_with_regex_and_gliner_results() -> None:
+    blocks = [_block("0612345678")]
+    regex_det = _raw_det("0612345678", EntityType.PHONE, end=10)
+    gliner_det = _raw_det("0612345678", EntityType.PHONE, end=10)
+
+    dedup_mock = MagicMock(return_value=[regex_det])
+
+    with (
+        patch("incognito.pipeline.detector.detect_regex", return_value=[regex_det]),
+        patch("incognito.pipeline.detector.detect_gliner", return_value=[gliner_det]),
+        patch("incognito.pipeline.detector.deduplicate", dedup_mock),
+        patch("incognito.pipeline.detector.confirm_candidates", return_value=[]),
+    ):
+        detect(blocks, _noop_generate)
+
+    dedup_mock.assert_called_once_with([regex_det], [gliner_det])
+
+
+# ---------------------------------------------------------------------------
+# Empty blocks → empty list, no crash
+# ---------------------------------------------------------------------------
+
+
+def test_empty_blocks_returns_empty_list() -> None:
+    with (
+        patch("incognito.pipeline.detector.detect_regex", return_value=[]),
+        patch("incognito.pipeline.detector.detect_gliner", return_value=[]),
+        patch("incognito.pipeline.detector.deduplicate", return_value=[]),
+        patch("incognito.pipeline.detector.confirm_candidates", return_value=[]),
+    ):
+        result = detect([], _noop_generate)
+
+    assert result == []
+
+
+# ---------------------------------------------------------------------------
+# GLiNER failure → raises DetectionError (not swallowed)
+# ---------------------------------------------------------------------------
+
+
+def test_gliner_failure_raises_detection_error() -> None:
+    blocks = [_block("Jean Dupont")]
+
+    def exploding_gliner(b: list[TextBlock]) -> list[RawDetection]:
+        raise DetectionError("GLiNER model crashed")
+
+    with (
+        patch("incognito.pipeline.detector.detect_regex", return_value=[]),
+        patch("incognito.pipeline.detector.detect_gliner", exploding_gliner),
+        pytest.raises(DetectionError),
+    ):
+        detect(blocks, _noop_generate)
+
+
+# ---------------------------------------------------------------------------
+# generate_fn not called when no GLiNER candidates survive dedup
+# ---------------------------------------------------------------------------
+
+
+def test_generate_fn_not_called_when_no_gliner_candidates() -> None:
+    blocks = [_block("jean@example.com")]
+    regex_det = _raw_det("jean@example.com", EntityType.EMAIL, end=16)
+    generate_mock = MagicMock(return_value="")
+
+    with (
+        patch("incognito.pipeline.detector.detect_regex", return_value=[regex_det]),
+        patch("incognito.pipeline.detector.detect_gliner", return_value=[]),
+        patch("incognito.pipeline.detector.deduplicate", return_value=[regex_det]),
+        patch("incognito.pipeline.detector.confirm_candidates", return_value=[]) as confirm_mock,
+    ):
+        detect(blocks, generate_mock)
+
+    # confirm_candidates is called with empty candidates, so generate_fn must not be
+    # invoked. Verify by checking the candidates arg is empty.
+    candidates_arg = confirm_mock.call_args[0][1]
+    assert candidates_arg == []
+    generate_mock.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Return value is regex_dets + confirmed (not deduped list directly)
+# ---------------------------------------------------------------------------
+
+
+def test_return_value_is_regex_plus_confirmed() -> None:
+    blocks = [_block("Marie Martin, jean@example.com")]
+    regex_det = _raw_det("jean@example.com", EntityType.EMAIL, start=14, end=30)
+    gliner_det = _raw_det("Marie Martin", EntityType.PERSON, start=0, end=12)
+    confirmed_det = _raw_det("Marie Martin", EntityType.PERSON, start=0, end=12)
+
+    with (
+        patch("incognito.pipeline.detector.detect_regex", return_value=[regex_det]),
+        patch("incognito.pipeline.detector.detect_gliner", return_value=[gliner_det]),
+        patch(
+            "incognito.pipeline.detector.deduplicate",
+            return_value=[regex_det, gliner_det],
+        ),
+        patch(
+            "incognito.pipeline.detector.confirm_candidates",
+            return_value=[confirmed_det],
+        ),
+    ):
+        result = detect(blocks, _noop_generate)
+
+    assert regex_det in result
+    assert confirmed_det in result
     assert len(result) == 2
-    assert result[0].page == 1
-    assert result[0].bbox == bbox_a
-    assert result[0].block_index == 0
-    assert result[1].page == 2
-    assert result[1].bbox == bbox_b
-    assert result[1].block_index == 3
 
 
-def test_whitespace_only_block_skipped_no_generate_call() -> None:
-    called = False
-
-    def generate_fn(prompt: str, system: str) -> str:
-        nonlocal called
-        called = True
-        return "[]"
-
-    result = detect([_block("   \n\t  ")], generate_fn)
-
-    assert result == []
-    assert not called
-
-
-def test_no_pii_found_returns_empty_list() -> None:
-    result = detect([_block("Texte sans PII.")], _generate_returning("[]"))
-    assert result == []
-
-
-def test_malformed_json_raises_detection_error() -> None:
-    with pytest.raises(DetectionError):
-        detect([_block("Jean Dupont")], _generate_returning("not json at all"))
-
-
-def test_non_list_json_raises_detection_error() -> None:
-    payload = json.dumps({"text": "foo", "entity_type": "person", "start": 0, "end": 3})
-    with pytest.raises(DetectionError):
-        detect([_block("foo bar")], _generate_returning(payload))
-
-
-def test_missing_required_field_raises_detection_error() -> None:
-    payload = json.dumps([{"text": "Jean", "entity_type": "person"}])
-    with pytest.raises(DetectionError):
-        detect([_block("Jean Dupont")], _generate_returning(payload))
+# ---------------------------------------------------------------------------
+# Purity: no httpx import in detector.py
+# ---------------------------------------------------------------------------
 
 
 def test_no_httpx_import_in_detector() -> None:
-    detector_path = Path(__file__).parent.parent / "src" / "incognito" / "pipeline" / "detector.py"
-    source = detector_path.read_text()
+    source = (
+        Path(__file__).parent.parent / "src" / "incognito" / "pipeline" / "detector.py"
+    ).read_text()
     assert "httpx" not in source
 
 
-def test_bbox_inherited_exactly() -> None:
-    exact_bbox = BBox(x=3.14, y=2.72, width=99.9, height=14.1)
-    block = _block("jean@example.com", page=3, block_index=7, bbox=exact_bbox)
-    response = json.dumps(
-        [
-            {
-                "text": "jean@example.com",
-                "entity_type": "email",
-                "start": 0,
-                "end": 16,
-            }
-        ]
-    )
-    result = detect([block], _generate_returning(response))
-
-    assert len(result) == 1
-    assert result[0].bbox == exact_bbox
+# ---------------------------------------------------------------------------
+# Old internals deleted
+# ---------------------------------------------------------------------------
 
 
-def test_code_fenced_json_parsed_correctly() -> None:
-    block = _block("Jean Dupont")
-    payload = textwrap.dedent(
-        """\
-        ```json
-        [{"text": "Jean Dupont", "entity_type": "person", "start": 0, "end": 11}]
-        ```"""
-    )
-    result = detect([block], _generate_returning(payload))
+def test_old_internals_not_present_in_detector_module() -> None:
+    import incognito.pipeline.detector as detector_module
 
-    assert len(result) == 1
-    assert result[0].text == "Jean Dupont"
+    deleted = [
+        "_SYSTEM_PROMPT",
+        "_FENCE_RE",
+        "_parse_response",
+        "_strip_code_fences",
+        "_detect_block",
+    ]
+    for name in deleted:
+        assert not hasattr(detector_module, name), f"{name!r} still exists in detector.py"
 
 
-def test_generate_fn_exception_wrapped_as_detection_error() -> None:
-    def exploding_generate(prompt: str, system: str) -> str:
-        raise RuntimeError("model crashed")
+# ---------------------------------------------------------------------------
+# GenerateFn re-exported from detector
+# ---------------------------------------------------------------------------
 
-    with pytest.raises(DetectionError):
-        detect([_block("Jean Dupont")], exploding_generate)
+
+def test_generate_fn_importable_from_detector() -> None:
+    from incognito.pipeline.detector import GenerateFn as DetectorGenerateFn
+
+    assert DetectorGenerateFn is not None
