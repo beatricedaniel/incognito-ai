@@ -47,7 +47,7 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "PLR2004", "PLC0415"]
+"tests/**/*.py" = ["S101", "PLR2004", "PLC0415", "PT019", "S603", "S607"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
@@ -66,6 +66,7 @@ markers = [
     "slow: marks tests as slow",
     "eval: F1 evaluation corpus",
     "ollama: requires running Ollama",
+    "leakage: redaction completeness verification against corpus",
 ]
 
 [tool.coverage.run]
