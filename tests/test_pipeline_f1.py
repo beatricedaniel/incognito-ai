@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
@@ -56,6 +58,8 @@ EMAIL_F1_THRESHOLD: Final[float] = 1.00
 PHONE_F1_THRESHOLD: Final[float] = 1.00
 PERSON_RECALL_THRESHOLD: Final[float] = 0.90
 PERSON_PRECISION_THRESHOLD: Final[float] = 0.50
+
+REPORT_PATH: Final[Path] = CORPUS_DIR.parent / "eval_results.json"
 
 
 # ---------------------------------------------------------------------------
@@ -231,6 +235,47 @@ def _aggregate_counts(results: list[F1Result]) -> F1Result:
 # ---------------------------------------------------------------------------
 
 
+_RESULTS: dict[str, F1Result] = {}
+
+
+def _counts_to_dict(c: EntityCounts) -> dict[str, object]:
+    return {
+        "tp": c.tp,
+        "fp": c.fp,
+        "fn": c.fn,
+        "precision": round(c.precision, 4),
+        "recall": round(c.recall, 4),
+        "f1": round(c.f1, 4),
+    }
+
+
+def _write_report() -> None:
+    if not _RESULTS:
+        return
+    from incognito.core.config import GLINER_THRESHOLD_ADDRESS, GLINER_THRESHOLD_PERSON
+
+    agg = _aggregate_counts(list(_RESULTS.values()))
+    report: dict[str, object] = {
+        "timestamp": datetime.now(tz=UTC).isoformat(timespec="seconds"),
+        "thresholds": {"person": GLINER_THRESHOLD_PERSON, "address": GLINER_THRESHOLD_ADDRESS},
+        "per_document": {
+            name: {et: _counts_to_dict(r.per_entity[et]) for et in r.per_entity}
+            for name, r in _RESULTS.items()
+        },
+        "aggregate": {
+            "per_entity_type": {et: _counts_to_dict(agg.per_entity[et]) for et in agg.per_entity},
+            "micro_averaged": _counts_to_dict(agg.micro),
+        },
+    }
+    REPORT_PATH.write_text(json.dumps(report, indent=2) + "\n")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _eval_report() -> Iterator[None]:
+    yield
+    _write_report()
+
+
 @pytest.fixture(scope="module")
 def _ollama_ready() -> None:
     from incognito.ollama.manager import check_ready
@@ -251,6 +296,7 @@ def per_doc_results(_ollama_ready: None) -> dict[str, F1Result]:
         detections = detect(blocks, generate)
         gt = _load_ground_truth(gt_path)
         results[pdf_path.name] = score_detections(gt, detections)
+    _RESULTS.update(results)
     return results
 
 

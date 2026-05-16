@@ -41,3 +41,4 @@ _bmad*/
 
 # Evaluation corpus — PDFs contain real PII, JSON annotations reference it
 tests/evaluation/corpus/
+tests/evaluation/eval_results.json
