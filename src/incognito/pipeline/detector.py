@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Final, Protocol
+from typing import Final
 
 from pydantic import ValidationError
 
 from incognito.core.exceptions import DetectionError
 from incognito.models import RawDetection, TextBlock
+from incognito.pipeline.detect_ner import GenerateFn
 
 _SYSTEM_PROMPT: Final[str] = (
     "Extract all PII entities (person, address, phone, email) from this French text.\n"
@@ -20,10 +21,6 @@ _FENCE_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*```(?:json)?\s*\n(.*?)\n\s*```\s*$",
     re.DOTALL,
 )
-
-
-class GenerateFn(Protocol):
-    def __call__(self: GenerateFn, prompt: str, system: str = "") -> str: ...
 
 
 def detect(blocks: list[TextBlock], generate_fn: GenerateFn) -> list[RawDetection]:

@@ -34,3 +34,13 @@ GLINER_MODEL: Final[str] = "urchade/gliner_multi-v2.1"
 GLINER_LABELS: Final[tuple[str, ...]] = ("person", "address")
 GLINER_THRESHOLD_PERSON: Final[float] = 0.5
 GLINER_THRESHOLD_ADDRESS: Final[float] = 0.3
+
+GEMMA_CONFIRM_SYSTEM: Final[str] = (
+    "You validate PII candidates in French administrative text.\n"
+    "For each numbered candidate, answer 1 (real PII) or 0 (not PII).\n"
+    "Real PII: personal names of individuals, residential/personal postal addresses.\n"
+    "Not PII: organization names, facility names, job titles, institutional addresses "
+    "(headquarters, offices), legal references, department names, city names used as "
+    "facility identifiers.\n"
+    "Answer format: one line per candidate, ID: 0 or 1. Nothing else."
+)
