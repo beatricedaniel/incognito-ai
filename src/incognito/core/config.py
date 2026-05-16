@@ -28,6 +28,15 @@ SSE_QUEUE_TIMEOUT_SECONDS: Final[float] = 30.0
 
 PASSPHRASE_MIN_LENGTH: Final[int] = 12
 
+KEYFILE_FORMAT_VERSION: Final[int] = 1
+KEYFILE_ATTACHMENT_NAME: Final[str] = "recovery.bin"
+ARGON2_MEMORY_KIB: Final[int] = 65_536
+ARGON2_TIME_COST: Final[int] = 3
+ARGON2_PARALLELISM: Final[int] = 1
+ARGON2_KEY_LENGTH: Final[int] = 32
+ARGON2_SALT_LENGTH: Final[int] = 16
+AESGCM_NONCE_LENGTH: Final[int] = 12
+
 STATIC_DIR: Final[Path] = Path(__file__).resolve().parent.parent / "static"
 
 GLINER_MODEL: Final[str] = "urchade/gliner_multi-v2.1"

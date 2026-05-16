@@ -208,7 +208,7 @@ async def test_redact_reversible_missing_passphrase_returns_400(client: AsyncCli
 
 
 @pytest.mark.asyncio
-async def test_redact_reversible_valid_passphrase_not_yet_implemented(
+async def test_redact_reversible_valid_passphrase_returns_pdfkey(
     client: AsyncClient,
 ) -> None:
     session, _ = _reviewing_session_with_pdf()
@@ -219,9 +219,9 @@ async def test_redact_reversible_valid_passphrase_not_yet_implemented(
         json={"mode": "reversible", "passphrase": "a]b2c3d4e5f6g"},
     )
 
-    assert resp.status_code == 500
-    body_str = str(resp.json()).lower()
-    assert "not yet" in body_str or "available" in body_str or "implemented" in body_str
+    assert resp.status_code == 200
+    assert resp.headers["content-type"] == "application/pdf"
+    assert ".pdfkey" in resp.headers.get("content-disposition", "")
 
 
 # ---------------------------------------------------------------------------

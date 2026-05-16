@@ -23,6 +23,7 @@ from incognito.core.config import (
 )
 from incognito.core.exceptions import (
     DetectionNotFoundError,
+    KeyfileError,
     PassphraseError,
     PdfError,
     RedactionError,
@@ -206,16 +207,22 @@ async def redact(session_id: str, body: RedactRequest | None = None) -> FileResp
 
     if request.mode == RedactionMode.REVERSIBLE:
         try:
-            keyfile_embed(output_path, session.original_pdf_bytes, request.passphrase)  # type: ignore[arg-type]
-        except NotImplementedError:
+            output_path = keyfile_embed(
+                output_path,
+                session.original_pdf_bytes,
+                request.passphrase,  # type: ignore[arg-type]
+            )
+        except (PassphraseError, KeyfileError):
             session.state = SessionState.ERROR
             session.updated_at = time.time()
-            raise RedactionError("Reversible redaction is not yet available") from None
+            raise
 
     session.state = SessionState.COMPLETE
     session.updated_at = time.time()
 
     download_name = _build_download_filename(session.original_filename)
+    if request.mode == RedactionMode.REVERSIBLE:
+        download_name = download_name.replace(".pdf", ".pdfkey")
 
     return FileResponse(
         path=output_path,

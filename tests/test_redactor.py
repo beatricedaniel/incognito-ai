@@ -104,8 +104,8 @@ def test_redaction_removes_text_from_pdftotext() -> None:
 
     redact_pdf(pdf_path, [det], out)
 
-    result = subprocess.run(  # noqa: S603
-        ["pdftotext", str(out), "-"],  # noqa: S607
+    result = subprocess.run(
+        ["pdftotext", str(out), "-"],
         capture_output=True,
         text=True,
         encoding="utf-8",
