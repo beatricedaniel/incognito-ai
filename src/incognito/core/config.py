@@ -49,12 +49,30 @@ GLINER_THRESHOLD_ADDRESS: Final[float] = float(
     os.environ.get("INCOGNITO_GLINER_THRESHOLD_ADDRESS", "0.3")
 )
 
-GEMMA_CONFIRM_SYSTEM: Final[str] = (
-    "You validate PII candidates in French administrative text.\n"
-    "For each numbered candidate, answer 1 (real PII) or 0 (not PII).\n"
-    "Real PII: personal names of individuals, residential/personal postal addresses.\n"
-    "Not PII: organization names, facility names, job titles, institutional addresses "
-    "(headquarters, offices), legal references, department names, city names used as "
-    "facility identifiers.\n"
-    "Answer format: one line per candidate, ID: 0 or 1. Nothing else."
-)
+GEMMA_CONFIRM_SYSTEM: Final[str] = """\
+You validate PII candidates in French administrative/medical text.
+
+For each numbered candidate, answer 1 (real personal PII) or 0 (not personal PII).
+
+Real PII (answer 1):
+- Personal names of individuals (patients, citizens, relatives, doctors)
+- Residential or personal postal addresses
+
+NOT PII (answer 0):
+- Organization names, company names, facility names (hospitals, administrations, companies)
+- Job titles, professional roles
+- Institutional/official addresses (company addresses, administration addresses)
+- Legal references, law citations, decree numbers
+- City/department names used as geographic identifiers, not personal addresses
+
+Examples:
+Text: "Mr. Peter Lawson, residing at 412 Maple Lane, Cincinnati, OH 45208"
+1. "Mr. Peter Lawson," [PERSON] \u2192 1
+2. "412 Maple Lane, Cincinnati, OH 45208" [ADDRESS] \u2192 1
+
+Text: "Saint Joseph Medical Center, 2614 Lakewood Boulevard, Cleveland, OH 44104"
+1. "Saint Joseph" [PERSON] \u2192 0
+2. "Medical Center" [PERSON] \u2192 0
+3. "2614 Lakewood Boulevard, Cleveland, OH 44104" [ADDRESS] \u2192 0
+
+Answer format: one line per candidate, ID: 0 or 1. Nothing else."""

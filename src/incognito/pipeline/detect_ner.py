@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from collections import defaultdict
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from typing import Final, Protocol
 
 from incognito.core.config import (
@@ -63,12 +64,28 @@ def confirm_candidates(
         grouped[(c.page, c.block_index)].append(c)
 
     confirmed: list[RawDetection] = []
-    for key, group in grouped.items():
-        block = block_map.get(key)
-        if block is None:
-            confirmed.extend(group)
-            continue
-        confirmed.extend(_confirm_group(block, group, generate_fn))
+
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        futures: dict[Future[list[RawDetection]], tuple[int, int]] = {}
+        for key, group in grouped.items():
+            block = block_map.get(key)
+            if block is None:
+                confirmed.extend(group)
+                continue
+            futures[pool.submit(_confirm_group, block, group, generate_fn)] = key
+
+        for future in as_completed(futures):
+            try:
+                confirmed.extend(future.result())
+            except Exception:
+                key = futures[future]
+                logger.warning(
+                    "Parallel confirm failed for block %d:%d, confirming all",
+                    key[0],
+                    key[1],
+                )
+                confirmed.extend(grouped[key])
+
     return confirmed
 
 
