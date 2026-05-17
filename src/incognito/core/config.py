@@ -40,7 +40,7 @@ MAX_DECOMPRESSED_RECOVERY_BYTES: Final[int] = MAX_UPLOAD_BYTES * 4
 
 STATIC_DIR: Final[Path] = Path(__file__).resolve().parent.parent / "static"
 
-GLINER_MODEL: Final[str] = "urchade/gliner_multi-v2.1"
+GLINER_MODEL: Final[str] = "knowledgator/gliner-pii-large-v1.0"
 GLINER_LABELS: Final[tuple[str, ...]] = ("person", "address")
 GLINER_THRESHOLD_PERSON: Final[float] = float(
     os.environ.get("INCOGNITO_GLINER_THRESHOLD_PERSON", "0.5")

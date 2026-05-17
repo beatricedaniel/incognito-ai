@@ -102,7 +102,7 @@ def test_config_gliner_model_constant_exists() -> None:
     from incognito.core import config
 
     assert hasattr(config, "GLINER_MODEL")
-    assert config.GLINER_MODEL == "urchade/gliner_multi-v2.1"
+    assert config.GLINER_MODEL == "knowledgator/gliner-pii-large-v1.0"
 
 
 def test_config_gliner_labels_constant_exists() -> None:

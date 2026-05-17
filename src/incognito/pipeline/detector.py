@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Final
 
 from incognito.core.exceptions import DetectionError
-from incognito.models import RawDetection, TextBlock
+from incognito.models import EntityType, RawDetection, TextBlock
 from incognito.pipeline.detect_ner import (
     GenerateFn,
     confirm_candidates,
@@ -26,8 +26,8 @@ def detect(blocks: list[TextBlock], generate_fn: GenerateFn) -> list[RawDetectio
         raise DetectionError("Detection stage failed") from exc
 
     deduped = deduplicate(regex_dets, gliner_dets)
-    # deduplicate returns regex_dets + surviving GLiNER (in that order).
-    # Regex detections are auto-confirmed; only GLiNER candidates need Gemma.
     gliner_candidates = deduped[len(regex_dets) :]
-    confirmed = confirm_candidates(blocks, gliner_candidates, generate_fn)
-    return regex_dets + confirmed
+    address_candidates = [c for c in gliner_candidates if c.entity_type == EntityType.ADDRESS]
+    non_address_candidates = [c for c in gliner_candidates if c.entity_type != EntityType.ADDRESS]
+    confirmed = confirm_candidates(blocks, non_address_candidates, generate_fn)
+    return regex_dets + address_candidates + confirmed
