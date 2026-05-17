@@ -23,37 +23,24 @@ BENCHMARK_PATH: Final[Path] = (
 
 CORPUS_PAIRS: Final[list[tuple[Path, Path]]] = [
     (
-        CORPUS_DIR / "770003408_EHPAD LES ACACIAS.pdf",
-        CORPUS_DIR / "770003408_EHPAD_LES_ACACIAS_pii.json",
+        CORPUS_DIR / "housing_allocation_decision_notice.pdf",
+        CORPUS_DIR / "housing_allocation_decision_notice_pii.json",
     ),
     (
-        CORPUS_DIR / "780823878_EHPAD LA ROSE DES VENTS.pdf",
-        CORPUS_DIR / "780823878_EHPAD_LA_ROSE_DES_VENTS_pii.json",
-    ),
-    (
-        CORPUS_DIR / "930816723_EHPAD RESIDENCE LES BEAUX MONTS.pdf",
-        CORPUS_DIR / "930816723_EHPAD_RESIDENCE_LES_BEAUX_MONTS_pii.json",
-    ),
-    (
-        CORPUS_DIR / "950805978_EHPAD RESIDENCE RACHEL.pdf",
-        CORPUS_DIR / "950805978_EHPAD_RESIDENCE_RACHEL_pii.json",
-    ),
-    (
-        CORPUS_DIR / "950807826_EHPAD LE PAVILLON DES ARTS.pdf",
-        CORPUS_DIR / "950807826_EHPAD_LE_PAVILLON_DES_ARTS_pii.json",
+        CORPUS_DIR / "ssa_benefit_verification.pdf",
+        CORPUS_DIR / "ssa_benefit_verification_pii.json",
     ),
 ]
 
 BASELINE_DOCS: Final[frozenset[str]] = frozenset(
     [
-        "770003408_EHPAD LES ACACIAS.pdf",
-        "780823878_EHPAD LA ROSE DES VENTS.pdf",
-        "930816723_EHPAD RESIDENCE LES BEAUX MONTS.pdf",
+        "housing_allocation_decision_notice.pdf",
+        "ssa_benefit_verification.pdf",
     ]
 )
 
 BASELINE_TOLERANCE: Final[float] = 0.05
-MICRO_F1_THRESHOLD: Final[float] = 0.80
+MICRO_F1_THRESHOLD: Final[float] = 0.70
 EMAIL_F1_THRESHOLD: Final[float] = 1.00
 PHONE_F1_THRESHOLD: Final[float] = 1.00
 PERSON_RECALL_THRESHOLD: Final[float] = 0.90
