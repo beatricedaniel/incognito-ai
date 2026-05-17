@@ -6,6 +6,7 @@ var State = {
   PROCESSING: "processing",
   REVIEWING: "reviewing",
   REDACTING: "redacting",
+  RECOVERING: "recovering",
   COMPLETE: "complete",
   ERROR: "error",
 };
@@ -15,6 +16,7 @@ var ollamaReady = false;
 var sessionId = null;
 var eventSource = null;
 var dragEnterCount = 0;
+var activeTab = "anonymise";
 
 var dropZone = document.getElementById("drop-zone");
 var dropLabel = document.getElementById("drop-zone-label");
@@ -28,6 +30,10 @@ var completePanel = document.getElementById("complete-panel");
 var completeMessage = document.getElementById("complete-message");
 var downloadLink = document.getElementById("download-link");
 var resetButton = document.getElementById("reset-button");
+var tabBar = document.getElementById("tab-bar");
+var tabAnonymise = document.getElementById("tab-anonymise");
+var tabRecover = document.getElementById("tab-recover");
+var panelRecover = document.getElementById("panel-recover");
 
 // — State machine —
 
@@ -38,14 +44,21 @@ function transition(next) {
 
 function render() {
   var reviewing = currentState === State.REVIEWING || currentState === State.REDACTING;
+  var recovering = currentState === State.RECOVERING;
+  var showTabs = currentState === State.IDLE || currentState === State.ERROR || recovering;
 
   errorEl.hidden = currentState !== State.ERROR;
   reviewPanel.hidden = !reviewing;
   completePanel.hidden = currentState !== State.COMPLETE;
-  dropZone.hidden = reviewing || currentState === State.COMPLETE;
+  tabBar.hidden = !showTabs;
+
+  dropZone.hidden = reviewing || currentState === State.COMPLETE || recovering
+    || activeTab !== "anonymise";
+  panelRecover.hidden = activeTab !== "recover"
+    || !(currentState === State.IDLE || currentState === State.ERROR || recovering);
 
   if (currentState === State.IDLE) {
-    dropLabel.textContent = "Déposez un PDF ici";
+    dropLabel.textContent = "D\u00e9posez un PDF ici";
     dropHint.hidden = false;
     dropZone.classList.remove("drop-zone--disabled");
   } else if (currentState === State.UPLOADING) {
@@ -56,7 +69,7 @@ function render() {
     dropHint.hidden = true;
     dropZone.classList.add("drop-zone--disabled");
   } else if (currentState === State.ERROR) {
-    dropLabel.textContent = "Déposez un PDF ici";
+    dropLabel.textContent = "D\u00e9posez un PDF ici";
     dropHint.hidden = false;
     dropZone.classList.remove("drop-zone--disabled");
   }
@@ -169,8 +182,12 @@ function handleFiles(files) {
   if (!files || files.length === 0) return;
 
   var file = files[0];
+  if (file.name.toLowerCase().endsWith(".pdfkey")) {
+    showError("Ce fichier .pdfkey est destin\u00e9 \u00e0 la r\u00e9cup\u00e9ration. Utilisez l\u2019onglet \u00ab\u00a0R\u00e9cup\u00e9rer\u00a0\u00bb.");
+    return;
+  }
   if (!isPdf(file)) {
-    showError("Veuillez sélectionner un fichier PDF.");
+    showError("Veuillez s\u00e9lectionner un fichier PDF.");
     return;
   }
 
@@ -278,6 +295,9 @@ resetButton.addEventListener("click", function () {
   if (downloadLink.href) URL.revokeObjectURL(downloadLink.href);
   downloadLink.hidden = true;
   sessionId = null;
+  if (window.Recovery) window.Recovery.destroy();
+  activeTab = "anonymise";
+  applyTabUI();
   transition(State.IDLE);
 });
 
@@ -288,3 +308,55 @@ function showError(message) {
   errorEl.textContent = message;
   errorEl.hidden = false;
 }
+
+// — Tabs —
+
+var recoveryCallbacks = {
+  onRecovering: function () { transition(State.RECOVERING); },
+  onError: function (msg) { showError(msg); },
+  onComplete: function (url, filename) {
+    downloadLink.href = url;
+    downloadLink.download = filename;
+    downloadLink.textContent = filename;
+    downloadLink.hidden = false;
+    completeMessage.textContent = "R\u00e9cup\u00e9ration termin\u00e9e.";
+    transition(State.COMPLETE);
+  }
+};
+
+function applyTabUI() {
+  var isAnonymise = activeTab === "anonymise";
+  tabAnonymise.setAttribute("aria-selected", isAnonymise ? "true" : "false");
+  tabAnonymise.classList.toggle("tab--active", isAnonymise);
+  tabAnonymise.tabIndex = isAnonymise ? 0 : -1;
+  tabRecover.setAttribute("aria-selected", !isAnonymise ? "true" : "false");
+  tabRecover.classList.toggle("tab--active", !isAnonymise);
+  tabRecover.tabIndex = !isAnonymise ? 0 : -1;
+}
+
+function switchTab(tab) {
+  if (currentState !== State.IDLE && currentState !== State.ERROR) return;
+  if (currentState === State.ERROR) {
+    errorEl.hidden = true;
+    currentState = State.IDLE;
+  }
+  activeTab = tab;
+  applyTabUI();
+  if (tab === "recover") {
+    if (window.Recovery) window.Recovery.init(recoveryCallbacks);
+  } else {
+    if (window.Recovery) window.Recovery.destroy();
+  }
+  render();
+}
+
+tabAnonymise.addEventListener("click", function () { switchTab("anonymise"); });
+tabRecover.addEventListener("click", function () { switchTab("recover"); });
+tabBar.addEventListener("keydown", function (e) {
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+    e.preventDefault();
+    var next = activeTab === "anonymise" ? "recover" : "anonymise";
+    switchTab(next);
+    document.getElementById("tab-" + (next === "anonymise" ? "anonymise" : "recover")).focus();
+  }
+});

@@ -17,12 +17,50 @@
       <span class="badge badge-local">100% local &mdash; aucune donn&eacute;e ne quitte votre machine</span>
     </section>
 
-    <section id="drop-zone" role="button" tabindex="0"
+    <nav id="tab-bar" class="tab-bar" role="tablist" aria-label="Mode">
+      <button id="tab-anonymise" class="tab tab--active" role="tab"
+              aria-selected="true" aria-controls="drop-zone" tabindex="0">Anonymiser</button>
+      <button id="tab-recover" class="tab" role="tab"
+              aria-selected="false" aria-controls="panel-recover" tabindex="-1">R&eacute;cup&eacute;rer</button>
+    </nav>
+
+    <section id="drop-zone" role="tabpanel" aria-labelledby="tab-anonymise"
+             tabindex="0"
              aria-label="D&eacute;posez un PDF ici ou cliquez pour s&eacute;lectionner">
       <p id="drop-zone-label" class="drop-zone-label">D&eacute;posez un PDF ici</p>
       <p class="drop-zone-hint">ou cliquez pour s&eacute;lectionner un fichier</p>
       <input type="file" id="file-input" accept=".pdf,application/pdf"
              class="visually-hidden" aria-hidden="true">
+    </section>
+
+    <section id="panel-recover" role="tabpanel" aria-labelledby="tab-recover" hidden>
+      <div id="recovery-drop-zone" class="recovery-drop-zone" role="button" tabindex="0"
+           aria-label="D&eacute;posez un fichier .pdfkey ici ou cliquez pour s&eacute;lectionner">
+        <p class="drop-zone-label">D&eacute;posez un fichier .pdfkey ici</p>
+        <p class="drop-zone-hint">ou cliquez pour s&eacute;lectionner</p>
+        <input type="file" id="recovery-file-input" accept=".pdfkey"
+               class="visually-hidden" aria-hidden="true">
+      </div>
+      <div id="recovery-file-info" class="recovery-file-info" hidden>
+        <span id="recovery-filename" class="recovery-filename"></span>
+        <button id="recovery-file-clear" type="button" class="recovery-file-clear"
+                aria-label="Supprimer le fichier s&eacute;lectionn&eacute;">&times;</button>
+      </div>
+      <div id="recovery-passphrase-group" class="passphrase-group" hidden>
+        <label for="recovery-passphrase" class="passphrase-label">
+          Phrase secr&egrave;te (12 caract&egrave;res minimum)
+        </label>
+        <input type="password" id="recovery-passphrase" class="passphrase-input"
+               minlength="12" autocomplete="off"
+               aria-describedby="recovery-strength recovery-hint">
+        <div class="passphrase-meta">
+          <span id="recovery-strength" class="passphrase-strength" aria-live="polite"></span>
+          <span id="recovery-hint" class="passphrase-hint" aria-live="assertive"></span>
+        </div>
+      </div>
+      <button id="recovery-submit" type="button" class="recovery-submit" disabled>
+        R&eacute;cup&eacute;rer le document
+      </button>
     </section>
 
     <section id="review-panel" hidden>
@@ -81,5 +119,6 @@
   <script type="module" src="/js/preview.js"></script>
   <script src="/js/sidebar.js"></script>
   <script src="/js/mode-toggle.js"></script>
+  <script src="/js/recovery.js"></script>
 </body>
 </html>
