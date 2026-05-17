@@ -62,6 +62,8 @@ pdftotext document_redacted.pdf - | grep -i "dupont"
 
 ## How it works
 
+![Pipeline architecture](assets/pipeline.png)
+
 ```
 PDF → per-block text extraction (PyMuPDF)
     → regex detection (phone numbers, email addresses)
