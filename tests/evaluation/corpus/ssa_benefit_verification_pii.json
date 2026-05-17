@@ -1,0 +1,42 @@
+[
+  {
+    "text": "Mr. James R. Calloway",
+    "entity_type": "person",
+    "page": 0,
+    "block_index": 16,
+    "start": 0,
+    "end": 21
+  },
+  {
+    "text": "4127 Westmoreland Drive, Apt 7C\nCincinnati, OH 45208-3174",
+    "entity_type": "address",
+    "page": 0,
+    "block_index": 16,
+    "start": 22,
+    "end": 79
+  },
+  {
+    "text": "(513) 555-0142",
+    "entity_type": "phone",
+    "page": 0,
+    "block_index": 29,
+    "start": 83,
+    "end": 97
+  },
+  {
+    "text": "Eleanor S. Reinholt",
+    "entity_type": "person",
+    "page": 0,
+    "block_index": 32,
+    "start": 0,
+    "end": 19
+  },
+  {
+    "text": "e.reinholt@ssa.gov",
+    "entity_type": "email",
+    "page": 0,
+    "block_index": 32,
+    "start": 100,
+    "end": 118
+  }
+]

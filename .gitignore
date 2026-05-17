@@ -40,6 +40,15 @@ docs/
 _bmad*/
 CLAUDE.md
 
-# Evaluation corpus — PDFs contain real PII, JSON annotations reference it
-tests/evaluation/corpus/
+# Evaluation corpus — real PII documents (not synthetic)
+tests/evaluation/corpus/950807826_EHPAD_LE_PAVILLON_DES_ARTS_pii.json
+tests/evaluation/corpus/950807826_EHPAD\ LE\ PAVILLON\ DES\ ARTS.pdf
+tests/evaluation/corpus/950805978_EHPAD_RESIDENCE_RACHEL_pii.json
+tests/evaluation/corpus/950805978_EHPAD\ RESIDENCE\ RACHEL.pdf
+tests/evaluation/corpus/930816723_EHPAD_RESIDENCE_LES_BEAUX_MONTS_pii.json
+tests/evaluation/corpus/930816723_EHPAD\ RESIDENCE\ LES\ BEAUX\ MONTS.pdf
+tests/evaluation/corpus/780823878_EHPAD_LA_ROSE_DES_VENTS_pii.json
+tests/evaluation/corpus/780823878_EHPAD\ LA\ ROSE\ DES\ VENTS.pdf
+tests/evaluation/corpus/770003408_EHPAD_LES_ACACIAS_pii.json
+tests/evaluation/corpus/770003408_EHPAD\ LES\ ACACIAS.pdf
 tests/evaluation/eval_results.json

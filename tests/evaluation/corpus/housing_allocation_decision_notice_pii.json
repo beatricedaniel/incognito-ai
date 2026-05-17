@@ -1,0 +1,242 @@
+[
+  {
+    "text": "Civic Centre, 14 Crown Square",
+    "entity_type": "address",
+    "page": 0,
+    "block_index": 4,
+    "start": 65,
+    "end": 94
+  },
+  {
+    "text": "Aisha Rahimi-Mendez",
+    "entity_type": "person",
+    "page": 0,
+    "block_index": 6,
+    "start": 3,
+    "end": 22
+  },
+  {
+    "text": "27 Elmsworth Terrace",
+    "entity_type": "address",
+    "page": 0,
+    "block_index": 7,
+    "start": 9,
+    "end": 29
+  },
+  {
+    "text": "Kendal, Cumbria, LA9 6QR",
+    "entity_type": "address",
+    "page": 0,
+    "block_index": 8,
+    "start": 0,
+    "end": 24
+  },
+  {
+    "text": "07700 900 842",
+    "entity_type": "phone",
+    "page": 0,
+    "block_index": 9,
+    "start": 11,
+    "end": 24
+  },
+  {
+    "text": "a.rahimi.mendez@protonmail.co.uk",
+    "entity_type": "email",
+    "page": 0,
+    "block_index": 9,
+    "start": 34,
+    "end": 66
+  },
+  {
+    "text": "Ms Rahimi-Mendez",
+    "entity_type": "person",
+    "page": 0,
+    "block_index": 10,
+    "start": 5,
+    "end": 21
+  },
+  {
+    "text": "D. Whitcombe",
+    "entity_type": "person",
+    "page": 0,
+    "block_index": 17,
+    "start": 0,
+    "end": 12
+  },
+  {
+    "text": "Daniel J. Whitcombe",
+    "entity_type": "person",
+    "page": 0,
+    "block_index": 18,
+    "start": 0,
+    "end": 19
+  },
+  {
+    "text": "d.whitcombe@westmoreland.gov.uk",
+    "entity_type": "email",
+    "page": 0,
+    "block_index": 20,
+    "start": 7,
+    "end": 38
+  },
+  {
+    "text": "Rahimi-Mendez, Aisha",
+    "entity_type": "person",
+    "page": 1,
+    "block_index": 7,
+    "start": 17,
+    "end": 37
+  },
+  {
+    "text": "Tomasz Rahimi",
+    "entity_type": "person",
+    "page": 1,
+    "block_index": 15,
+    "start": 2,
+    "end": 15
+  },
+  {
+    "text": "Léa Rahimi-Mendez",
+    "entity_type": "person",
+    "page": 1,
+    "block_index": 16,
+    "start": 2,
+    "end": 19
+  },
+  {
+    "text": "17 Bridgemere Cottages, Burneside Road, Kendal LA9 5RJ",
+    "entity_type": "address",
+    "page": 1,
+    "block_index": 20,
+    "start": 16,
+    "end": 70
+  },
+  {
+    "text": "Flat 4B, 27 Elmsworth Terrace, Kendal LA9 6QR",
+    "entity_type": "address",
+    "page": 1,
+    "block_index": 21,
+    "start": 16,
+    "end": 61
+  },
+  {
+    "text": "Margaret S. Akinola",
+    "entity_type": "person",
+    "page": 1,
+    "block_index": 23,
+    "start": 10,
+    "end": 29
+  },
+  {
+    "text": "07911 406 253",
+    "entity_type": "phone",
+    "page": 1,
+    "block_index": 25,
+    "start": 16,
+    "end": 29
+  },
+  {
+    "text": "Kendal Community Hospital, Birklands Way, Kendal LA9 7RG",
+    "entity_type": "address",
+    "page": 2,
+    "block_index": 10,
+    "start": 15,
+    "end": 71
+  },
+  {
+    "text": "01539 887 204",
+    "entity_type": "phone",
+    "page": 2,
+    "block_index": 12,
+    "start": 49,
+    "end": 62
+  },
+  {
+    "text": "Penelope R. Hartwell-Davies",
+    "entity_type": "person",
+    "page": 2,
+    "block_index": 25,
+    "start": 12,
+    "end": 39
+  },
+  {
+    "text": "p.hartwell-davies@royalpharmsoc.org.uk",
+    "entity_type": "email",
+    "page": 2,
+    "block_index": 29,
+    "start": 17,
+    "end": 55
+  },
+  {
+    "text": "Flat 4B, 27 Elmsworth Terrace, Kendal, Cumbria LA9 6QR",
+    "entity_type": "address",
+    "page": 3,
+    "block_index": 7,
+    "start": 9,
+    "end": 63
+  },
+  {
+    "text": "01539 612 088",
+    "entity_type": "phone",
+    "page": 3,
+    "block_index": 10,
+    "start": 18,
+    "end": 31
+  },
+  {
+    "text": "9 Oakwell Rise, Burneside, Kendal, Cumbria LA9 6BB",
+    "entity_type": "address",
+    "page": 3,
+    "block_index": 21,
+    "start": 9,
+    "end": 59
+  },
+  {
+    "text": "P. Hartwell-Whitfield",
+    "entity_type": "person",
+    "page": 4,
+    "block_index": 17,
+    "start": 0,
+    "end": 21
+  },
+  {
+    "text": "Penelope R. Hartwell-Whitfield",
+    "entity_type": "person",
+    "page": 4,
+    "block_index": 19,
+    "start": 4,
+    "end": 34
+  },
+  {
+    "text": "D. J. Whitcombe",
+    "entity_type": "person",
+    "page": 4,
+    "block_index": 23,
+    "start": 18,
+    "end": 33
+  },
+  {
+    "text": "Penelope R. Hartwell-Whitfield",
+    "entity_type": "person",
+    "page": 4,
+    "block_index": 25,
+    "start": 21,
+    "end": 51
+  },
+  {
+    "text": "Civic Centre, 14 Crown Square, Kendal, Cumbria, LA9 4DL",
+    "entity_type": "address",
+    "page": 4,
+    "block_index": 27,
+    "start": 16,
+    "end": 71
+  },
+  {
+    "text": "p.hartwell-whitfield@westmoreland.gov.uk",
+    "entity_type": "email",
+    "page": 4,
+    "block_index": 28,
+    "start": 17,
+    "end": 57
+  }
+]

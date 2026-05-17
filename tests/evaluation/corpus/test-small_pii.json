@@ -1,0 +1,6 @@
+[
+  {"text": "Jean Dupont", "entity_type": "person"},
+  {"text": "12 rue de Paris, 75001 Paris", "entity_type": "address"},
+  {"text": "01 23 45 67 89", "entity_type": "phone"},
+  {"text": "jean.dupont@example.fr", "entity_type": "email"}
+]
