@@ -2,7 +2,7 @@
 
 100% local PII anonymizer for French administrative and medical PDFs.
 
-Drag a PDF in. GLiNER spots person names and addresses, Gemma 4 E4B (running locally via Ollama) confirms them, and regex catches phone numbers and email addresses. Review the highlights, dismiss false positives, click Redact. The output PDF has all confirmed PII **permanently deleted from the data layer** — not hidden behind cosmetic rectangles, but irrecoverably removed. Verify it yourself: `pdftotext redacted.pdf -` returns nothing.
+Drag a PDF in. GLiNER (PII-specialized model) spots person names and addresses, Gemma 4 E4B (running locally via Ollama) confirms person candidates, and regex catches phone numbers and email addresses. Review the highlights, dismiss false positives, click Redact. The output PDF has all confirmed PII **permanently deleted from the data layer** — not hidden behind cosmetic rectangles, but irrecoverably removed. Verify it yourself: `pdftotext redacted.pdf -` returns nothing.
 
 No data ever leaves your machine.
 
@@ -67,7 +67,8 @@ PDF → per-block text extraction (PyMuPDF)
     → regex detection (phone numbers, email addresses)
     → GLiNER candidate detection (person names, addresses)
     → deduplication
-    → Gemma 4 E4B confirmation of GLiNER candidates (via Ollama)
+    → Gemma 4 E4B confirmation of person candidates (via Ollama)
+    → address candidates auto-confirmed (Gemma skipped)
     → post-detection validation (verify offsets match source text)
     → human review (sidebar list, dismiss false positives)
     → true redaction (apply_redactions + metadata strip + XMP strip + garbage collection + non-incremental save)
@@ -175,8 +176,8 @@ ruff check && ruff format --check && mypy --strict src/ && pytest -q && pip-audi
 - **Python 3.13**, uv-managed, src layout
 - **FastAPI + uvicorn** — localhost web server
 - **PyMuPDF** — PDF text extraction + true data-layer redaction
-- **GLiNER (gliner_multi-v2.1)** — in-process NER for person names and addresses
-- **Ollama + Gemma 4 E4B** — local LLM confirmation of GLiNER candidates, no GPU required
+- **GLiNER (gliner-pii-large-v1.0)** — PII-specialized in-process NER for person names and addresses
+- **Ollama + Gemma 4 E4B** — local LLM confirmation of person candidates (addresses auto-confirmed), no GPU required
 - **cryptography** — AES-256-GCM + Argon2id for reversible mode
 - **Pydantic v2** — all data models
 - **PDF.js** — vendored locally for PDF preview
