@@ -15,11 +15,11 @@ window.ModeToggle = (function () {
   var modeOptions;
 
   var DESCRIPTIONS = {
-    irreversible: "Les donn\u00e9es personnelles seront d\u00e9finitivement supprim\u00e9es.",
-    reversible: "Les donn\u00e9es seront chiffr\u00e9es et r\u00e9cup\u00e9rables avec votre phrase secr\u00e8te."
+    irreversible: "Personal data will be permanently deleted.",
+    reversible: "Data will be encrypted and recoverable with your passphrase."
   };
 
-  var STRENGTH_LABELS = {weak: "Faible", fair: "Correcte", strong: "Forte"};
+  var STRENGTH_LABELS = {weak: "Weak", fair: "Fair", strong: "Strong"};
 
   function computeStrength(value) {
     if (value.length < PASSPHRASE_MIN_LENGTH) return "weak";
@@ -61,7 +61,7 @@ window.ModeToggle = (function () {
     strengthEl.className = "passphrase-strength passphrase-strength--" + strength;
 
     if (value.length < PASSPHRASE_MIN_LENGTH) {
-      hintEl.textContent = PASSPHRASE_MIN_LENGTH - value.length + " caract\u00e8re(s) restant(s)";
+      hintEl.textContent = PASSPHRASE_MIN_LENGTH - value.length + " character(s) remaining";
     } else {
       hintEl.textContent = "";
     }

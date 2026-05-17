@@ -1,10 +1,10 @@
 "use strict";
 
 var ENTITY_META = {
-  person:  { label: "Personne",                        cssClass: "badge-person" },
-  address: { label: "Adresse",                         cssClass: "badge-address" },
-  phone:   { label: "T\u00e9l\u00e9phone",             cssClass: "badge-phone" },
-  email:   { label: "E-mail",                          cssClass: "badge-email" },
+  person:  { label: "Person",   cssClass: "badge-person" },
+  address: { label: "Address",  cssClass: "badge-address" },
+  phone:   { label: "Phone",    cssClass: "badge-phone" },
+  email:   { label: "Email",    cssClass: "badge-email" },
 };
 
 var SNIPPET_MAX = 40;
@@ -42,16 +42,16 @@ function renderSummary(detections) {
   var region = document.createElement("div");
   region.className = "sidebar-summary";
   region.setAttribute("role", "region");
-  region.setAttribute("aria-label", "R\u00e9sum\u00e9 des d\u00e9tections");
+  region.setAttribute("aria-label", "Detection summary");
 
   var title = document.createElement("h2");
   title.className = "sidebar-summary-title";
-  title.textContent = detections.length + " d\u00e9tection" + (detections.length > 1 ? "s" : "");
+  title.textContent = detections.length + " detection" + (detections.length !== 1 ? "s" : "");
   region.appendChild(title);
 
   var ul = document.createElement("ul");
   ul.className = "summary-counts";
-  ul.setAttribute("aria-label", "Nombre par type");
+  ul.setAttribute("aria-label", "Count by type");
 
   var types = Object.keys(ENTITY_META);
   for (var j = 0; j < types.length; j++) {
@@ -69,7 +69,7 @@ function renderSummary(detections) {
 
 function renderList(detections) {
   var nav = document.createElement("nav");
-  nav.setAttribute("aria-label", "D\u00e9tections par page");
+  nav.setAttribute("aria-label", "Detections by page");
 
   var currentPage = -1;
   var section = null;
@@ -131,7 +131,7 @@ function init(sessionId) {
   if (!sidebarEl) return;
 
   activeSessionId = sessionId;
-  sidebarEl.innerHTML = '<p class="sidebar-loading">Chargement des d\u00e9tections\u2026</p>';
+  sidebarEl.innerHTML = '<p class="sidebar-loading">Loading detections\u2026</p>';
 
   fetch("/api/detections/" + sessionId)
     .then(function (resp) {
@@ -150,7 +150,7 @@ function init(sessionId) {
       if (detections.length === 0) {
         var p = document.createElement("p");
         p.className = "sidebar-empty";
-        p.textContent = "Aucune d\u00e9tection trouv\u00e9e.";
+        p.textContent = "No detections found.";
         sidebarEl.appendChild(p);
         return;
       }
@@ -160,7 +160,7 @@ function init(sessionId) {
     })
     .catch(function () {
       if (activeSessionId !== sessionId) return;
-      sidebarEl.innerHTML = '<p class="sidebar-error">Impossible de charger les d\u00e9tections.</p>';
+      sidebarEl.innerHTML = '<p class="sidebar-error">Failed to load detections.</p>';
     });
 }
 

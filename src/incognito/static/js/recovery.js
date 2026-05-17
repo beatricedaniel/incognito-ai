@@ -2,7 +2,7 @@
 
 window.Recovery = (function () {
   var PASSPHRASE_MIN_LENGTH = 12;
-  var STRENGTH_LABELS = {weak: "Faible", fair: "Correcte", strong: "Forte"};
+  var STRENGTH_LABELS = {weak: "Weak", fair: "Fair", strong: "Strong"};
 
   var _initialized = false;
   var _callbacks = null;
@@ -42,7 +42,7 @@ window.Recovery = (function () {
     strengthEl.textContent = STRENGTH_LABELS[strength];
     strengthEl.className = "passphrase-strength passphrase-strength--" + strength;
     if (value.length < PASSPHRASE_MIN_LENGTH) {
-      hintEl.textContent = PASSPHRASE_MIN_LENGTH - value.length + " caract\u00e8re(s) restant(s)";
+      hintEl.textContent = PASSPHRASE_MIN_LENGTH - value.length + " character(s) remaining";
     } else {
       hintEl.textContent = "";
     }
@@ -51,7 +51,7 @@ window.Recovery = (function () {
 
   function selectFile(file) {
     if (!file.name.toLowerCase().endsWith(".pdfkey")) {
-      if (_callbacks) _callbacks.onError("Veuillez s\u00e9lectionner un fichier .pdfkey.");
+      if (_callbacks) _callbacks.onError("Please select a .pdfkey file.");
       return;
     }
     _file = file;
@@ -126,7 +126,7 @@ window.Recovery = (function () {
     if (!_file || passphraseInput.value.length < PASSPHRASE_MIN_LENGTH) return;
 
     submitBtn.disabled = true;
-    submitBtn.textContent = "R\u00e9cup\u00e9ration en cours\u2026";
+    submitBtn.textContent = "Recovering\u2026";
     submitBtn.classList.add("recovering");
     dropZone.classList.add("drop-zone--disabled");
 
@@ -152,13 +152,13 @@ window.Recovery = (function () {
       })
       .catch(function (err) {
         resetSubmitButton();
-        if (_callbacks) _callbacks.onError(err.detail || "La r\u00e9cup\u00e9ration a \u00e9chou\u00e9.");
+        if (_callbacks) _callbacks.onError(err.detail || "Recovery failed.");
       });
   }
 
   function resetSubmitButton() {
     submitBtn.disabled = true;
-    submitBtn.textContent = "R\u00e9cup\u00e9rer le document";
+    submitBtn.textContent = "Recover document";
     submitBtn.classList.remove("recovering");
     dropZone.classList.remove("drop-zone--disabled");
   }

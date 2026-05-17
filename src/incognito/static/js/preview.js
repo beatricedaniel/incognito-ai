@@ -15,7 +15,7 @@ function init(sessionId) {
   initialized = true;
 
   container.innerHTML =
-    '<p class="pdf-preview-loading">Chargement de l\u2019aper\u00e7u\u2026</p>';
+    '<p class="pdf-preview-loading">Loading preview\u2026</p>';
 
   fetch("/api/pdf/" + sessionId)
     .then(function (resp) {
@@ -33,7 +33,7 @@ function init(sessionId) {
     .catch(function () {
       if (container) {
         container.innerHTML =
-          '<p class="pdf-preview-error">Impossible de charger l\u2019aper\u00e7u PDF.</p>';
+          '<p class="pdf-preview-error">Failed to load PDF preview.</p>';
       }
     });
 }

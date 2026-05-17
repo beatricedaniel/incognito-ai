@@ -58,18 +58,18 @@ function render() {
     || !(currentState === State.IDLE || currentState === State.ERROR || recovering);
 
   if (currentState === State.IDLE) {
-    dropLabel.textContent = "D\u00e9posez un PDF ici";
+    dropLabel.textContent = "Drop a PDF here";
     dropHint.hidden = false;
     dropZone.classList.remove("drop-zone--disabled");
   } else if (currentState === State.UPLOADING) {
-    dropLabel.textContent = "Envoi en cours\u2026";
+    dropLabel.textContent = "Uploading\u2026";
     dropHint.hidden = true;
     dropZone.classList.add("drop-zone--disabled");
   } else if (currentState === State.PROCESSING) {
     dropHint.hidden = true;
     dropZone.classList.add("drop-zone--disabled");
   } else if (currentState === State.ERROR) {
-    dropLabel.textContent = "D\u00e9posez un PDF ici";
+    dropLabel.textContent = "Drop a PDF here";
     dropHint.hidden = false;
     dropZone.classList.remove("drop-zone--disabled");
   }
@@ -77,10 +77,10 @@ function render() {
   redactButton.disabled = currentState !== State.REVIEWING ||
     (window.ModeToggle && !window.ModeToggle.isValid());
   if (currentState === State.REDACTING) {
-    redactButton.textContent = "Anonymisation en cours\u2026";
+    redactButton.textContent = "Anonymizing\u2026";
     redactButton.classList.add("redacting");
   } else {
-    redactButton.textContent = "Anonymiser";
+    redactButton.textContent = "Anonymize";
     redactButton.classList.remove("redacting");
   }
 
@@ -104,14 +104,14 @@ function render() {
 // — Status polling —
 
 function renderStatus() {
-  var localBadge = '<span class="badge badge-local">100% local \u2014 aucune donn\u00e9e ne quitte votre machine</span>';
+  var localBadge = '<span class="badge badge-local">100% local \u2014 no data leaves your machine</span>';
 
   if (ollamaReady) {
     statusBar.innerHTML =
       '<span class="badge badge-ready">Ready</span>' + localBadge;
   } else {
     statusBar.innerHTML =
-      '<p class="status-warning">Veuillez d\u00e9marrer Ollama avec Gemma\u00a04 E4B</p>' + localBadge;
+      '<p class="status-warning">Please start Ollama with Gemma 4 E4B</p>' + localBadge;
   }
 }
 
@@ -183,11 +183,11 @@ function handleFiles(files) {
 
   var file = files[0];
   if (file.name.toLowerCase().endsWith(".pdfkey")) {
-    showError("Ce fichier .pdfkey est destin\u00e9 \u00e0 la r\u00e9cup\u00e9ration. Utilisez l\u2019onglet \u00ab\u00a0R\u00e9cup\u00e9rer\u00a0\u00bb.");
+    showError("This .pdfkey file is for recovery. Use the \u201cRecover\u201d tab.");
     return;
   }
   if (!isPdf(file)) {
-    showError("Veuillez s\u00e9lectionner un fichier PDF.");
+    showError("Please select a PDF file.");
     return;
   }
 
@@ -206,7 +206,7 @@ function handleFiles(files) {
       connectEvents(data.events_url);
     })
     .catch(function (err) {
-      showError(err.detail || "L\u2019envoi a \u00e9chou\u00e9.");
+      showError(err.detail || "Upload failed.");
     });
 }
 
@@ -214,7 +214,7 @@ function handleFiles(files) {
 
 function connectEvents(url) {
   transition(State.PROCESSING);
-  dropLabel.textContent = "Traitement en cours\u2026";
+  dropLabel.textContent = "Processing\u2026";
 
   var source = new EventSource(url);
   eventSource = source;
@@ -234,14 +234,14 @@ function connectEvents(url) {
     source.close();
     eventSource = null;
     var data = JSON.parse(e.data);
-    showError(data.detail || "Erreur lors du traitement.");
+    showError(data.detail || "Processing error.");
   });
 
   source.onerror = function () {
     source.close();
     eventSource = null;
     if (currentState === State.PROCESSING) {
-      showError("Connexion au serveur perdue.");
+      showError("Connection lost.");
     }
   };
 }
@@ -280,12 +280,12 @@ redactButton.addEventListener("click", function () {
       downloadLink.download = result.filename;
       downloadLink.textContent = result.filename;
       downloadLink.hidden = false;
-      completeMessage.textContent = "Anonymisation termin\u00e9e.";
+      completeMessage.textContent = "Anonymization complete.";
       transition(State.COMPLETE);
       downloadLink.click();
     })
     .catch(function (err) {
-      showError(err.detail || "Erreur lors de l\u2019anonymisation.");
+      showError(err.detail || "Anonymization failed.");
     });
 });
 
@@ -319,7 +319,7 @@ var recoveryCallbacks = {
     downloadLink.download = filename;
     downloadLink.textContent = filename;
     downloadLink.hidden = false;
-    completeMessage.textContent = "R\u00e9cup\u00e9ration termin\u00e9e.";
+    completeMessage.textContent = "Recovery complete.";
     transition(State.COMPLETE);
   }
 };

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,45 +10,45 @@
   <main>
     <header>
       <h1>Incognito</h1>
-      <p class="tagline">Anonymisez vos documents PDF en toute confidentialit&eacute;</p>
+      <p class="tagline">Anonymize your PDF documents with complete privacy</p>
     </header>
 
     <section id="status-bar" aria-live="polite">
-      <span class="badge badge-local">100% local &mdash; aucune donn&eacute;e ne quitte votre machine</span>
+      <span class="badge badge-local">100% local &mdash; no data leaves your machine</span>
     </section>
 
     <nav id="tab-bar" class="tab-bar" role="tablist" aria-label="Mode">
       <button id="tab-anonymise" class="tab tab--active" role="tab"
-              aria-selected="true" aria-controls="drop-zone" tabindex="0">Anonymiser</button>
+              aria-selected="true" aria-controls="drop-zone" tabindex="0">Anonymize</button>
       <button id="tab-recover" class="tab" role="tab"
-              aria-selected="false" aria-controls="panel-recover" tabindex="-1">R&eacute;cup&eacute;rer</button>
+              aria-selected="false" aria-controls="panel-recover" tabindex="-1">Recover</button>
     </nav>
 
     <section id="drop-zone" role="tabpanel" aria-labelledby="tab-anonymise"
              tabindex="0"
-             aria-label="D&eacute;posez un PDF ici ou cliquez pour s&eacute;lectionner">
-      <p id="drop-zone-label" class="drop-zone-label">D&eacute;posez un PDF ici</p>
-      <p class="drop-zone-hint">ou cliquez pour s&eacute;lectionner un fichier</p>
+             aria-label="Drop a PDF here or click to select">
+      <p id="drop-zone-label" class="drop-zone-label">Drop a PDF here</p>
+      <p class="drop-zone-hint">or click to select a file</p>
       <input type="file" id="file-input" accept=".pdf,application/pdf"
              class="visually-hidden" aria-hidden="true">
     </section>
 
     <section id="panel-recover" role="tabpanel" aria-labelledby="tab-recover" hidden>
       <div id="recovery-drop-zone" class="recovery-drop-zone" role="button" tabindex="0"
-           aria-label="D&eacute;posez un fichier .pdfkey ici ou cliquez pour s&eacute;lectionner">
-        <p class="drop-zone-label">D&eacute;posez un fichier .pdfkey ici</p>
-        <p class="drop-zone-hint">ou cliquez pour s&eacute;lectionner</p>
+           aria-label="Drop a .pdfkey file here or click to select">
+        <p class="drop-zone-label">Drop a .pdfkey file here</p>
+        <p class="drop-zone-hint">or click to select</p>
         <input type="file" id="recovery-file-input" accept=".pdfkey"
                class="visually-hidden" aria-hidden="true">
       </div>
       <div id="recovery-file-info" class="recovery-file-info" hidden>
         <span id="recovery-filename" class="recovery-filename"></span>
         <button id="recovery-file-clear" type="button" class="recovery-file-clear"
-                aria-label="Supprimer le fichier s&eacute;lectionn&eacute;">&times;</button>
+                aria-label="Remove selected file">&times;</button>
       </div>
       <div id="recovery-passphrase-group" class="passphrase-group" hidden>
         <label for="recovery-passphrase" class="passphrase-label">
-          Phrase secr&egrave;te (12 caract&egrave;res minimum)
+          Passphrase (12 characters minimum)
         </label>
         <input type="password" id="recovery-passphrase" class="passphrase-input"
                minlength="12" autocomplete="off"
@@ -59,40 +59,39 @@
         </div>
       </div>
       <button id="recovery-submit" type="button" class="recovery-submit" disabled>
-        R&eacute;cup&eacute;rer le document
+        Recover document
       </button>
     </section>
 
     <section id="review-panel" hidden>
       <p id="ai-disclaimer" role="note">
-        La d&eacute;tection IA peut manquer certaines entit&eacute;s.
-        V&eacute;rifiez attentivement toutes les d&eacute;tections avant de proc&eacute;der &agrave; l&rsquo;anonymisation.
+        AI detection may miss some entities. Review all detections carefully before anonymizing.
       </p>
       <div class="review-layout">
-        <aside id="detection-sidebar" aria-label="Liste des d&eacute;tections"></aside>
+        <aside id="detection-sidebar" aria-label="Detection list"></aside>
         <div id="pdf-preview-container" class="pdf-preview-container"></div>
       </div>
       <div id="redact-bar">
         <fieldset id="mode-selector" class="mode-selector">
-          <legend class="visually-hidden">Mode d'anonymisation</legend>
+          <legend class="visually-hidden">Anonymization mode</legend>
           <div class="mode-selector__controls">
             <label class="mode-option mode-option--active">
               <input type="radio" name="redact-mode" value="irreversible" checked>
-              <span class="mode-option__label">Irr&eacute;versible</span>
+              <span class="mode-option__label">Irreversible</span>
             </label>
             <label class="mode-option">
               <input type="radio" name="redact-mode" value="reversible">
-              <span class="mode-option__label">R&eacute;versible</span>
+              <span class="mode-option__label">Reversible</span>
             </label>
           </div>
           <p id="mode-description" class="mode-description" aria-live="polite">
-            Les donn&eacute;es personnelles seront d&eacute;finitivement supprim&eacute;es.
+            Personal data will be permanently deleted.
           </p>
         </fieldset>
 
         <div id="passphrase-group" class="passphrase-group" hidden>
           <label for="passphrase-input" class="passphrase-label">
-            Phrase secr&egrave;te (12 caract&egrave;res minimum)
+            Passphrase (12 characters minimum)
           </label>
           <input type="password" id="passphrase-input" class="passphrase-input"
                  minlength="12" autocomplete="off"
@@ -103,14 +102,14 @@
           </div>
         </div>
 
-        <button id="redact-button" type="button">Anonymiser</button>
+        <button id="redact-button" type="button">Anonymize</button>
       </div>
     </section>
 
     <section id="complete-panel" hidden>
       <p id="complete-message"></p>
       <a id="download-link" hidden></a>
-      <button id="reset-button" type="button">Traiter un autre document</button>
+      <button id="reset-button" type="button">Process another document</button>
     </section>
 
     <p id="error-message" role="alert" aria-live="assertive" hidden></p>
