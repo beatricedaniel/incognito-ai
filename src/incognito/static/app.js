@@ -11,12 +11,27 @@ var State = {
   ERROR: "error",
 };
 
+var FUNNY_MESSAGES = [
+  "Teaching AI to forget names\u2026",
+  "Putting tiny masks on every letter\u2026",
+  "Shredding digital fingerprints\u2026",
+  "Convincing pixels to look the other way\u2026",
+  "Deploying army of redaction robots\u2026",
+  "Asking Gemma to unsee things\u2026",
+  "Alphabetizing your secrets\u2026",
+  "Training black bars for duty\u2026",
+  "Polishing the invisibility cloak\u2026",
+  "Whispering \u2018you saw nothing\u2019 to the PDF\u2026"
+];
+
 var currentState = State.IDLE;
 var ollamaReady = false;
 var sessionId = null;
 var eventSource = null;
 var dragEnterCount = 0;
 var activeTab = "anonymise";
+var funnyInterval = null;
+var funnyIndex = 0;
 
 var dropZone = document.getElementById("drop-zone");
 var dropLabel = document.getElementById("drop-zone-label");
@@ -34,6 +49,48 @@ var tabBar = document.getElementById("tab-bar");
 var tabAnonymise = document.getElementById("tab-anonymise");
 var tabRecover = document.getElementById("tab-recover");
 var panelRecover = document.getElementById("panel-recover");
+var processingStage = document.getElementById("processing-stage");
+var processingFunny = document.getElementById("processing-funny");
+var processingWarning = document.getElementById("processing-warning");
+
+// — Processing messages —
+
+function warnBeforeUnload(e) { e.preventDefault(); }
+
+function startFunnyMessages() {
+  funnyIndex = 0;
+  processingFunny.textContent = FUNNY_MESSAGES[0];
+  funnyInterval = setInterval(function () {
+    funnyIndex = (funnyIndex + 1) % FUNNY_MESSAGES.length;
+    processingFunny.textContent = FUNNY_MESSAGES[funnyIndex];
+  }, 4000);
+}
+
+function stopFunnyMessages() {
+  if (funnyInterval) { clearInterval(funnyInterval); funnyInterval = null; }
+}
+
+function showProcessingUI() {
+  dropLabel.hidden = true;
+  dropHint.hidden = true;
+  processingStage.hidden = false;
+  processingFunny.hidden = false;
+  processingWarning.hidden = false;
+  dropZone.classList.remove("drop-zone--disabled");
+  dropZone.classList.add("drop-zone--processing");
+  startFunnyMessages();
+  window.addEventListener("beforeunload", warnBeforeUnload);
+}
+
+function hideProcessingUI() {
+  processingStage.hidden = true;
+  processingFunny.hidden = true;
+  processingWarning.hidden = true;
+  dropZone.classList.remove("drop-zone--processing");
+  dropLabel.hidden = false;
+  stopFunnyMessages();
+  window.removeEventListener("beforeunload", warnBeforeUnload);
+}
 
 // — State machine —
 
@@ -57,21 +114,23 @@ function render() {
   panelRecover.hidden = activeTab !== "recover"
     || !(currentState === State.IDLE || currentState === State.ERROR || recovering);
 
-  if (currentState === State.IDLE) {
-    dropLabel.textContent = "Drop a PDF here";
-    dropHint.hidden = false;
-    dropZone.classList.remove("drop-zone--disabled");
-  } else if (currentState === State.UPLOADING) {
-    dropLabel.textContent = "Uploading\u2026";
-    dropHint.hidden = true;
-    dropZone.classList.add("drop-zone--disabled");
-  } else if (currentState === State.PROCESSING) {
-    dropHint.hidden = true;
-    dropZone.classList.add("drop-zone--disabled");
-  } else if (currentState === State.ERROR) {
-    dropLabel.textContent = "Drop a PDF here";
-    dropHint.hidden = false;
-    dropZone.classList.remove("drop-zone--disabled");
+  if (currentState === State.PROCESSING) {
+    showProcessingUI();
+  } else {
+    hideProcessingUI();
+    if (currentState === State.IDLE) {
+      dropLabel.textContent = "Drop a PDF here";
+      dropHint.hidden = false;
+      dropZone.classList.remove("drop-zone--disabled");
+    } else if (currentState === State.UPLOADING) {
+      dropLabel.textContent = "Uploading\u2026";
+      dropHint.hidden = true;
+      dropZone.classList.add("drop-zone--disabled");
+    } else if (currentState === State.ERROR) {
+      dropLabel.textContent = "Drop a PDF here";
+      dropHint.hidden = false;
+      dropZone.classList.remove("drop-zone--disabled");
+    }
   }
 
   redactButton.disabled = currentState !== State.REVIEWING ||
@@ -214,14 +273,14 @@ function handleFiles(files) {
 
 function connectEvents(url) {
   transition(State.PROCESSING);
-  dropLabel.textContent = "Processing\u2026";
+  processingStage.textContent = "Processing\u2026";
 
   var source = new EventSource(url);
   eventSource = source;
 
   source.addEventListener("stage_update", function (e) {
     var data = JSON.parse(e.data);
-    dropLabel.textContent = data.message;
+    processingStage.textContent = data.message;
   });
 
   source.addEventListener("pipeline_complete", function () {

@@ -114,6 +114,15 @@ h1 {
   pointer-events: none;
 }
 
+#drop-zone.drop-zone--processing {
+  opacity: 1;
+  pointer-events: none;
+}
+
+.processing-msg { text-align: center; margin: 0.25rem 0; }
+.processing-funny { font-style: italic; min-height: 1.4em; transition: opacity 0.3s; color: #a0a0b8; }
+.processing-warning { font-size: 0.8rem; color: #888; }
+
 .drop-zone-label {
   font-size: 1.15rem;
   font-weight: 600;
