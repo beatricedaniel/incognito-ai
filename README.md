@@ -2,7 +2,7 @@
 
 100% local PII anonymizer for French administrative and medical PDFs.
 
-Drag a PDF in. Gemma 4 E4B (running locally via Ollama) detects person names, addresses, phone numbers, and email addresses. Review the highlights, dismiss false positives, click Redact. The output PDF has all confirmed PII **permanently deleted from the data layer** — not hidden behind cosmetic rectangles, but irrecoverably removed. Verify it yourself: `pdftotext redacted.pdf -` returns nothing.
+Drag a PDF in. GLiNER spots person names and addresses, Gemma 4 E4B (running locally via Ollama) confirms them, and regex catches phone numbers and email addresses. Review the highlights, dismiss false positives, click Redact. The output PDF has all confirmed PII **permanently deleted from the data layer** — not hidden behind cosmetic rectangles, but irrecoverably removed. Verify it yourself: `pdftotext redacted.pdf -` returns nothing.
 
 No data ever leaves your machine.
 
@@ -12,14 +12,14 @@ Built for the [Kaggle Gemma 4 Good Hackathon](https://www.kaggle.com/competition
 
 AI adoption in regulated organizations is blocked by a simple problem: documents contain PII, and there's no practical way to strip it before sharing or feeding into AI systems. Manual redaction takes 30-60 minutes per document and misses things. Cloud-based anonymization defeats the purpose — the data still leaves the building.
 
-incognito.ai uses AI to make AI safe to use. Gemma 4 identifies PII so documents can be safely fed into any downstream AI tool. The redacted PDF is genuinely clean — provable via text extraction, not by trust.
+incognito.ai uses AI to make AI safe to use. GLiNER and Gemma 4 identify PII so documents can be safely fed into any downstream AI tool. The redacted PDF is genuinely clean — provable via text extraction, not by trust.
 
 **AI for AI safety.**
 
 ## What makes this different
 
 - **True redaction.** PII is removed from the PDF data layer via PyMuPDF `apply_redactions()`, not drawn over with rectangles. `pdftotext` on the output returns zero PII. Metadata, XMP, and document history are stripped.
-- **100% local.** Gemma 4 E4B runs on-device via Ollama. No GPU required (~5 GB RAM). Zero network calls at runtime except `localhost:11434`.
+- **100% local.** GLiNER runs in-process, Gemma 4 E4B runs on-device via Ollama. No GPU required. Zero network calls at runtime except `localhost:11434`.
 - **Human-in-the-loop.** Every detection is shown before redaction. Dismiss false positives, approve the rest. Non-negotiable in regulated environments.
 - **Reversible mode.** Optionally produce a `.pdfkey` file — a valid redacted PDF that embeds encrypted recovery data (AES-256-GCM + Argon2id). Without the passphrase, it behaves as a standard redacted PDF. With the passphrase, the original is restored. One file, two levels of access.
 
@@ -64,7 +64,10 @@ pdftotext document_redacted.pdf - | grep -i "dupont"
 
 ```
 PDF → per-block text extraction (PyMuPDF)
-    → per-block NER (Gemma 4 E4B via Ollama)
+    → regex detection (phone numbers, email addresses)
+    → GLiNER candidate detection (person names, addresses)
+    → deduplication
+    → Gemma 4 E4B confirmation of GLiNER candidates (via Ollama)
     → post-detection validation (verify offsets match source text)
     → human review (sidebar list, dismiss false positives)
     → true redaction (apply_redactions + metadata strip + XMP strip + garbage collection + non-incremental save)
@@ -92,9 +95,12 @@ The `.pdfkey` file opens as a normal redacted PDF in any reader. Recovery requir
 src/incognito/
 ├── api/            # FastAPI routes (7 endpoints) + SSE streaming
 ├── core/           # Config, exceptions, TempFileManager, sessions
+├── gliner/         # GLiNER model loader (in-process NER for persons/addresses)
 ├── pipeline/       # The processing pipeline (sync, pure functions)
 │   ├── extractor   # PDF → list[TextBlock]
-│   ├── detector    # TextBlock → list[RawDetection] (NER via Ollama)
+│   ├── detect_regex # Regex-based detection (phone, email)
+│   ├── detect_ner  # GLiNER candidates + Gemma confirmation
+│   ├── detector    # Three-stage orchestrator: regex → GLiNER → Gemma confirm
 │   ├── validator   # list[RawDetection] → list[Detection]
 │   ├── redactor    # list[Detection] + PDF → redacted PDF
 │   ├── keyfile     # redacted PDF + original + passphrase → .pdfkey
@@ -103,7 +109,7 @@ src/incognito/
 └── static/         # Vanilla HTML/CSS/JS + PDF.js (vendored)
 ```
 
-Import direction: `static/ → api/ → pipeline/ → ollama/ → core/`. No reverse imports. Enforced by `import-linter`.
+Import direction: `static/ → api/ → pipeline/ → ollama/`. No reverse imports. Enforced by `import-linter`.
 
 ## API surface
 
@@ -169,7 +175,8 @@ ruff check && ruff format --check && mypy --strict src/ && pytest -q && pip-audi
 - **Python 3.13**, uv-managed, src layout
 - **FastAPI + uvicorn** — localhost web server
 - **PyMuPDF** — PDF text extraction + true data-layer redaction
-- **Ollama + Gemma 4 E4B** — local NER inference, no GPU required
+- **GLiNER (gliner_multi-v2.1)** — in-process NER for person names and addresses
+- **Ollama + Gemma 4 E4B** — local LLM confirmation of GLiNER candidates, no GPU required
 - **cryptography** — AES-256-GCM + Argon2id for reversible mode
 - **Pydantic v2** — all data models
 - **PDF.js** — vendored locally for PDF preview
@@ -182,7 +189,3 @@ ruff check && ruff format --check && mypy --strict src/ && pytest -q && pip-audi
 - All temp files via `TempFileManager` — `tempfile.mkdtemp()` with `0o700` permissions and `incognito-` prefix. Orphaned dirs cleaned on launch.
 - Passphrase never stored in session state, logs, or temp files — passed through and discarded.
 - Redaction applied fully before encrypted payload is embedded — the redacted layer is independently safe even if the encrypted payload is stripped.
-
-## License
-
-Apache 2.0
