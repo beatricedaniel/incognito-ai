@@ -8,6 +8,7 @@ from typing import Final
 HOST: Final[str] = os.environ.get("INCOGNITO_HOST", "127.0.0.1")
 PORT: Final[int] = int(os.environ.get("INCOGNITO_PORT", "8642"))
 LOG_LEVEL: Final[int] = getattr(logging, os.environ.get("INCOGNITO_LOG_LEVEL", "INFO").upper())
+NO_BROWSER: Final[bool] = os.environ.get("INCOGNITO_NO_BROWSER", "").lower() in ("1", "true", "yes")
 
 OLLAMA_HOST: Final[str] = "127.0.0.1"
 OLLAMA_PORT: Final[int] = 11434

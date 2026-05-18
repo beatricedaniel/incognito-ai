@@ -44,6 +44,7 @@ def _make_client(tmp_path: Path) -> TestClient:
     with (
         patch("incognito.app.STATIC_DIR", static_dir),
         patch("incognito.app.cleanup_orphaned_temp_dirs"),
+        patch("incognito.app.NO_BROWSER", True),
     ):
         from incognito.app import create_app
 

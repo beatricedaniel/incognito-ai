@@ -231,27 +231,8 @@ async def test_incognito_error_handler_does_not_leak_raw_exception(
 
 
 # ---------------------------------------------------------------------------
-# AC1 — main.run() opens browser and delegates to uvicorn (unit, no real server)
+# AC1 — main.run() delegates to uvicorn (unit, no real server)
 # ---------------------------------------------------------------------------
-
-
-def test_run_opens_browser_before_uvicorn() -> None:
-    call_order: list[str] = []
-
-    with (
-        patch("incognito.main.webbrowser.open", side_effect=lambda _: call_order.append("browser")),
-        patch(
-            "incognito.main.uvicorn.run",
-            side_effect=lambda *a, **kw: call_order.append("uvicorn"),
-        ),
-    ):
-        from incognito.main import run
-
-        run()
-
-    assert "browser" in call_order
-    assert "uvicorn" in call_order
-    assert call_order.index("browser") < call_order.index("uvicorn")
 
 
 def test_run_passes_factory_true_to_uvicorn() -> None:
@@ -260,10 +241,7 @@ def test_run_passes_factory_true_to_uvicorn() -> None:
     def _fake_uvicorn(*args: object, **kwargs: object) -> None:
         captured.update(kwargs)
 
-    with (
-        patch("incognito.main.webbrowser.open"),
-        patch("incognito.main.uvicorn.run", side_effect=_fake_uvicorn),
-    ):
+    with patch("incognito.main.uvicorn.run", side_effect=_fake_uvicorn):
         from incognito.main import run
 
         run()
@@ -277,10 +255,7 @@ def test_run_binds_to_localhost() -> None:
     def _fake_uvicorn(*args: object, **kwargs: object) -> None:
         captured.update(kwargs)
 
-    with (
-        patch("incognito.main.webbrowser.open"),
-        patch("incognito.main.uvicorn.run", side_effect=_fake_uvicorn),
-    ):
+    with patch("incognito.main.uvicorn.run", side_effect=_fake_uvicorn):
         from incognito.main import run
 
         run()
