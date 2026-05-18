@@ -48,4 +48,6 @@ tmp_tests/
 packaging/hf-cache/
 assets/*
 !assets/AppIcon.icns
+!assets/pipeline.png
+!assets/architecture.png
 scripts/generate_diagrams.py
