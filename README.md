@@ -23,19 +23,28 @@ incognito.ai uses AI to make AI safe to use. Regex patterns, GLiNER and Gemma 4 
 - **Human-in-the-loop.** Every detection is shown before redaction. Dismiss false positives, approve the rest. Non-negotiable in regulated environments.
 - **Reversible mode.** Optionally produce a `.pdfkey` file — a valid redacted PDF that embeds encrypted recovery data (AES-256-GCM + Argon2id). Without the passphrase, it behaves as a standard redacted PDF. With the passphrase, the original is restored. One file, two levels of access.
 
-## Quick start
+## Installation guide
 
-### Prerequisites
+### Option 1 — Download the macOS app
 
-- macOS 12+ or Linux (Ubuntu 22.04+)
+1. **Download the `.dmg`** from [Google Drive](https://drive.google.com/file/d/1XUjJgaBgp8PmQ0bpJtlJVfBQLQamjXTW/view?usp=sharing).
+2. Open the `.dmg` and drag **Incognito** into your Applications folder.
+3. On first launch, macOS may warn about an unidentified developer. Go to **System Settings > Privacy & Security** and click **Open Anyway**.
+
+### Option 2 — Run from source
+
+#### Prerequisites
+
+- macOS on Apple Silicon (M1 or later) or Linux (Ubuntu 22.04+)
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) package manager
 - [Ollama](https://ollama.com) installed and running
+- ~3 GB of free disk space (Ollama + Gemma 4 E4B model)
 
-### Setup
+#### Setup
 
 ```bash
-# Install and start Ollama, pull the model (~5 GB, one-time)
+# Install and start Ollama, pull the model (~2.5 GB, one-time)
 ollama serve &
 ollama pull gemma4:e4b
 
@@ -45,20 +54,24 @@ cd incognito-ai
 uv sync
 ```
 
-### Run
+#### Run
 
 ```bash
 uv run incognito
 ```
 
-The app opens in your browser. Drop a PDF, review detections, redact.
+The app opens in your browser at `http://127.0.0.1:8642`. Drop a PDF, review detections, redact.
 
-### Verify redaction
+#### Verify redaction
 
 ```bash
 pdftotext document_redacted.pdf - | grep -i "dupont"
 # (nothing)
 ```
+
+## Architecture
+
+![Architecture](assets/architecture.png)
 
 ## How it works
 
@@ -162,6 +175,19 @@ Current results on the evaluation corpus:
 | Phone     | 1.00      | 1.00   | 1.00 |
 | Email     | 1.00      | 1.00   | 1.00 |
 | **Micro** | **0.91**  | **0.83** | **0.87** |
+
+### Gemma 4 E4B impact on person detection
+
+| | GLiNER only | GLiNER + Gemma E4B |
+|---|---|---|
+| **TP** | 13 | 13 |
+| **FP** | 5 | 1 |
+| **FN** | 2 | 2 |
+| **Precision** | 72.2% | 92.9% |
+| **Recall** | 86.7% | 86.7% |
+| **F1** | 78.8% | 89.7% |
+
+Gemma E4B acts as a pure precision booster: it eliminated 4 out of 5 false positives (organization names misclassified as persons) without losing a single true detection — **+20.7pp precision, +10.9pp F1**, zero recall loss.
 
 ## Development
 
