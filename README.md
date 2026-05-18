@@ -105,7 +105,7 @@ redacted PDF + original PDF bytes + passphrase
 
 The `.pdfkey` file opens as a normal redacted PDF in any reader. Recovery requires incognito.ai and the passphrase.
 
-## Architecture
+## Structure
 
 ```
 src/incognito/

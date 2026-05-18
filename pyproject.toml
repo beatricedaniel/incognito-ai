@@ -1,7 +1,7 @@
 [project]
 name = "incognito-ai"
 version = "0.1.0"
-description = "100% local PII anonymizer for French admin/medical PDFs"
+description = "100% local PII anonymizer for admin/medical PDFs"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
