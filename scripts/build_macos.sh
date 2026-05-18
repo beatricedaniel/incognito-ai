@@ -47,10 +47,10 @@ uv run pyinstaller incognito.spec \
 APP_DIR="$DIST_DIR/${APP_NAME}.app"
 
 echo "==> Ad-hoc code signing..."
-codesign --force --sign - "$APP_DIR"
+codesign --deep --force --sign - "$APP_DIR"
 
 echo "==> Verifying signature..."
-codesign --verify "$APP_DIR"
+codesign --verify --deep "$APP_DIR"
 echo "  Signature OK"
 
 APP_SIZE=$(du -sh "$APP_DIR" | cut -f1)
@@ -68,19 +68,92 @@ echo "==> Staging DMG contents..."
 rm -rf "$DMG_STAGING"
 mkdir -p "$DMG_STAGING"
 cp -Rp "$APP_DIR" "$DMG_STAGING/"
-ln -s /Applications "$DMG_STAGING/Applications"
 
 echo "==> Verifying staged app signature..."
-codesign --verify "$DMG_STAGING/${APP_NAME}.app"
+codesign --verify --deep "$DMG_STAGING/${APP_NAME}.app"
+
+# --- Generate DMG background image (Retina 2x of 600x400) ---
+BG_IMG="$DIST_DIR/dmg-background.png"
+BG_FLAG=""
+if uv run python -c "from PIL import Image" 2>/dev/null; then
+    echo "==> Generating DMG background image..."
+    uv run python - "$BG_IMG" <<'PYEOF'
+import sys
+from PIL import Image, ImageDraw, ImageFont
+
+W, H = 1200, 800  # 2x Retina of 600x400
+img = Image.new("RGBA", (W, H))
+draw = ImageDraw.Draw(img)
+
+# Dark gradient background
+for y in range(H):
+    t = y / H
+    r = int(26 + (22 - 26) * t)
+    g = int(26 + (33 - 26) * t)
+    b = int(46 + (62 - 46) * t)
+    draw.line([(0, y), (W, y)], fill=(r, g, b, 255))
+
+# Arrow shaft: between icon positions (scaled 2x: 160*2=320, 440*2=880, y=170*2=340)
+ax1, ax2, ay = 400, 820, 340
+draw.line([(ax1, ay), (ax2, ay)], fill=(200, 200, 200, 160), width=5)
+# Arrowhead
+for dy in range(-18, 19):
+    draw.line([(ax2, ay + dy), (ax2 + 28, ay)], fill=(200, 200, 200, 160), width=2)
+
+# Labels below icon positions
+try:
+    font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 26)
+except OSError:
+    font = ImageFont.load_default()
+draw.text((320, 500), "Incognito", fill=(255, 255, 255, 180), font=font, anchor="mm")
+draw.text((880, 500), "Applications", fill=(255, 255, 255, 180), font=font, anchor="mm")
+
+img.save(sys.argv[1])
+PYEOF
+    BG_FLAG="--background $BG_IMG"
+    echo "  Background image: $BG_IMG"
+else
+    echo "  Warning: Pillow not available, DMG will have no background image."
+fi
 
 echo "==> Creating DMG..."
-hdiutil create \
-    -volname "$APP_NAME" \
-    -srcfolder "$DMG_STAGING" \
-    -ov \
-    -format UDZO \
-    -nospotlight \
-    -o "$DIST_DIR/$DMG_NAME"
+if command -v create-dmg &>/dev/null; then
+    # create-dmg returns exit code 2 when AppleScript window-styling
+    # fails (common in SSH/headless). The DMG is still valid.
+    set +e
+    create-dmg \
+        --volname "$APP_NAME" \
+        ${BG_FLAG} \
+        --window-pos 200 120 \
+        --window-size 600 400 \
+        --icon-size 80 \
+        --icon "$APP_NAME.app" 160 170 \
+        --app-drop-link 440 170 \
+        --no-internet-enable \
+        --format UDZO \
+        "$DIST_DIR/$DMG_NAME" \
+        "$DMG_STAGING/"
+    CREATE_DMG_EXIT=$?
+    set -e
+
+    if [ "$CREATE_DMG_EXIT" -gt 2 ]; then
+        echo "ERROR: create-dmg failed (exit $CREATE_DMG_EXIT)"
+        exit 1
+    fi
+    if [ "$CREATE_DMG_EXIT" -eq 2 ]; then
+        echo "  Warning: create-dmg couldn't apply window styling (exit 2). DMG is still valid."
+    fi
+else
+    echo "  create-dmg not found, falling back to hdiutil."
+    ln -s /Applications "$DMG_STAGING/Applications"
+    hdiutil create \
+        -volname "$APP_NAME" \
+        -srcfolder "$DMG_STAGING" \
+        -ov \
+        -format UDZO \
+        -nospotlight \
+        -o "$DIST_DIR/$DMG_NAME"
+fi
 
 DMG_PATH="$DIST_DIR/$DMG_NAME"
 DMG_BYTES=$(stat -f%z "$DMG_PATH")
