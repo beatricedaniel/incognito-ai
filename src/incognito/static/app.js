@@ -25,6 +25,8 @@ var FUNNY_MESSAGES = [
 ];
 
 var currentState = State.IDLE;
+var ollamaReachable = false;
+var modelReady = false;
 var ollamaReady = false;
 var sessionId = null;
 var eventSource = null;
@@ -163,22 +165,51 @@ function render() {
 // — Status polling —
 
 function renderStatus() {
+  var setupScreen = document.getElementById("setup-screen");
   var localBadge = '<span class="badge badge-local">100% local \u2014 no data leaves your machine</span>';
 
   if (ollamaReady) {
+    setupScreen.hidden = true;
     statusBar.innerHTML =
       '<span class="badge badge-ready">Ready</span>' + localBadge;
+    dropZone.classList.remove("drop-zone--disabled");
+    return;
+  }
+
+  setupScreen.hidden = false;
+  dropZone.classList.add("drop-zone--disabled");
+
+  if (!ollamaReachable) {
+    statusBar.innerHTML =
+      '<p class="status-warning">Ollama not detected</p>' + localBadge;
+    document.getElementById("setup-message").textContent =
+      "Incognito needs Ollama to run AI models locally.";
+    document.getElementById("setup-action").innerHTML =
+      '<a href="https://ollama.com/download" target="_blank" rel="noopener" class="setup-link">Download Ollama</a>';
   } else {
     statusBar.innerHTML =
-      '<p class="status-warning">Please start Ollama with Gemma 4 E4B</p>' + localBadge;
+      '<p class="status-warning">Model not installed</p>' + localBadge;
+    document.getElementById("setup-message").textContent =
+      "Ollama is running, but the Gemma 4 E4B model is not installed yet.";
+    document.getElementById("setup-action").innerHTML =
+      '<code class="setup-command">ollama pull gemma4:e4b</code>' +
+      '<button type="button" class="setup-copy" onclick="navigator.clipboard.writeText(\'ollama pull gemma4:e4b\')">Copy</button>';
   }
 }
 
 function pollStatus() {
   fetch("/api/status")
     .then(function (resp) { return resp.json(); })
-    .then(function (data) { ollamaReady = data.ollama_ready; })
-    .catch(function () { ollamaReady = false; })
+    .then(function (data) {
+      ollamaReachable = data.ollama_reachable;
+      modelReady = data.model_ready;
+      ollamaReady = data.ollama_reachable && data.model_ready;
+    })
+    .catch(function () {
+      ollamaReachable = false;
+      modelReady = false;
+      ollamaReady = false;
+    })
     .finally(renderStatus);
 }
 
@@ -237,6 +268,7 @@ function isPdf(file) {
 }
 
 function handleFiles(files) {
+  if (!ollamaReady) return;
   if (currentState !== State.IDLE) return;
   if (!files || files.length === 0) return;
 

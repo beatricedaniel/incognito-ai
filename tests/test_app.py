@@ -68,33 +68,45 @@ async def client(app: FastAPI) -> AsyncClient:
 
 
 # ---------------------------------------------------------------------------
-# AC2 — GET /api/status returns ollama_ready + model
+# AC2 — GET /api/status returns structured status dict
 # ---------------------------------------------------------------------------
+
+_STATUS_READY: Final[dict[str, object]] = {
+    "ollama_reachable": True,
+    "model_ready": True,
+    "model": "gemma4:e4b",
+}
+_STATUS_DOWN: Final[dict[str, object]] = {
+    "ollama_reachable": False,
+    "model_ready": False,
+    "model": "gemma4:e4b",
+}
 
 
 @pytest.mark.asyncio
 async def test_status_returns_ollama_ready_true(client: AsyncClient) -> None:
-    with patch("incognito.api.routes.check_ready", return_value=True):
+    with patch("incognito.api.routes.check_status", return_value=_STATUS_READY):
         resp = await client.get("/api/status")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["ollama_ready"] is True
+    assert body["ollama_reachable"] is True
+    assert body["model_ready"] is True
     assert body["model"] == "gemma4:e4b"
 
 
 @pytest.mark.asyncio
 async def test_status_returns_ollama_ready_false(client: AsyncClient) -> None:
-    with patch("incognito.api.routes.check_ready", return_value=False):
+    with patch("incognito.api.routes.check_status", return_value=_STATUS_DOWN):
         resp = await client.get("/api/status")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["ollama_ready"] is False
-    assert body["model"] == "gemma4:e4b"
+    assert body["ollama_reachable"] is False
+    assert body["model_ready"] is False
 
 
 @pytest.mark.asyncio
 async def test_status_has_no_legacy_status_key(client: AsyncClient) -> None:
-    with patch("incognito.api.routes.check_ready", return_value=True):
+    with patch("incognito.api.routes.check_status", return_value=_STATUS_READY):
         resp = await client.get("/api/status")
     assert "status" not in resp.json()
 

@@ -21,14 +21,20 @@ def _enforce_localhost() -> None:
 _enforce_localhost()
 
 
-def check_ready() -> bool:
+def check_status() -> dict[str, object]:
     try:
-        resp = httpx.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5.0)
+        resp = httpx.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=2.0)
         resp.raise_for_status()
-        models = resp.json().get("models", [])
-        return any(m.get("name", "").startswith(OLLAMA_MODEL) for m in models)
     except httpx.HTTPError:
-        return False
+        return {"ollama_reachable": False, "model_ready": False, "model": OLLAMA_MODEL}
+    models = resp.json().get("models", [])
+    model_found = any(m.get("name", "").startswith(OLLAMA_MODEL) for m in models)
+    return {"ollama_reachable": True, "model_ready": model_found, "model": OLLAMA_MODEL}
+
+
+def check_ready() -> bool:
+    result: bool = bool(check_status()["model_ready"])
+    return result
 
 
 def generate(prompt: str, system: str = "") -> str:

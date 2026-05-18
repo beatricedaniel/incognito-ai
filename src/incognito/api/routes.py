@@ -17,7 +17,6 @@ from starlette.background import BackgroundTask
 from incognito.api.events import run_pipeline
 from incognito.core.config import (
     MAX_UPLOAD_BYTES,
-    OLLAMA_MODEL,
     PASSPHRASE_MIN_LENGTH,
     SSE_QUEUE_TIMEOUT_SECONDS,
 )
@@ -31,7 +30,7 @@ from incognito.core.exceptions import (
 from incognito.core.sessions import create_session, delete_session, get_session
 from incognito.core.tempfiles import TempFileManager
 from incognito.models import RedactionMode, RedactRequest, SessionState
-from incognito.ollama.manager import check_ready
+from incognito.ollama.manager import check_status
 from incognito.pipeline.extractor import validate_pdf
 from incognito.pipeline.keyfile import embed as keyfile_embed
 from incognito.pipeline.recovery import recover as pipeline_recover
@@ -59,7 +58,7 @@ def _build_download_filename(original: str) -> str:
 
 @router.get("/status")
 def status() -> dict[str, object]:
-    return {"ollama_ready": check_ready(), "model": OLLAMA_MODEL}
+    return check_status()
 
 
 @router.post("/upload", status_code=201)
