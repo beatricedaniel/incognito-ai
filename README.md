@@ -2,7 +2,7 @@
 
 100% local PII anonymizer for administrative and medical PDFs.
 
-Drag a PDF into Incognito. Regex and a lightweight Named Entity Recognition model catch person names, phone numbers, email addresses, and postal addresses. Gemma 4 E4B (running locally via Ollama) confirms person candidates. Review the highlights, dismiss false positives, click Redact. The output PDF has all confirmed PII **permanently deleted from the data layer** — not hidden behind cosmetic rectangles, but irrecoverably removed. Verify it yourself: `pdftotext redacted.pdf -` returns nothing. Incognito also offers a reversible option. On the review page, click Reversible and enter a password. The output is a .pdfkey file with all PII removed. In Incognito, click Recover, drag in the .pdfkey file, enter the password, click Recover Document, and the output is your original PDF.  
+Drag a PDF into Incognito. Regex and a lightweight Named Entity Recognition (NER) model catch person names, phone numbers, email addresses, and postal addresses. Gemma 4 E4B (running locally via Ollama) confirms person candidates. Review the highlights, dismiss false positives, click Redact. The output PDF has all confirmed Personally Identifiable Information (PII) **permanently deleted from the data layer** — not hidden behind cosmetic rectangles, but irrecoverably removed. Verify it yourself: `pdftotext redacted.pdf -` returns nothing. Incognito also offers a reversible option. On the review page, click Reversible and enter a password. The output is a .pdfkey file with all PII removed. In Incognito, click Recover, drag in the .pdfkey file, enter the password, click Recover Document, and the output is your original PDF.  
 
 No data ever leaves your machine.
 
@@ -12,7 +12,7 @@ Built for the [Kaggle Gemma 4 Good Hackathon](https://www.kaggle.com/competition
 
 AI adoption in regulated organizations is blocked by a simple problem: documents contain PII, and there's no practical way to strip it before sharing or feeding into AI systems. Manual redaction takes 30-60 minutes per document and misses things. Cloud-based anonymization defeats the purpose — the data still leaves the building.
 
-incognito.ai uses AI to make AI safe to use. GLiNER and Gemma 4 identify PII, so documents can be safely fed into any downstream AI tool. The redacted PDF is genuinely clean — provable via text extraction, not by trust.
+incognito.ai uses AI to make AI safe to use. Regex patterns, GLiNER and Gemma 4 identify PII, so documents can be safely fed into any downstream AI tool. The redacted PDF is genuinely clean — provable via text extraction, not by trust.
 
 **AI for AI safety.**
 
@@ -126,11 +126,11 @@ Import direction: `static/ → api/ → pipeline/ → ollama/`. No reverse impor
 | `/api/redact/{session_id}` | POST | Trigger redaction (irreversible or reversible) |
 | `/api/recover` | POST | Recover original from `.pdfkey` + passphrase |
 
-## RGPD compliance
+## GDPR compliance
 
-Each RGPD principle maps to a verifiable property:
+Each GDPR principle maps to a verifiable property:
 
-| RGPD Principle | How incognito.ai enforces it | Verification |
+| GDPR Principle | How incognito.ai enforces it | Verification |
 |---|---|---|
 | Data minimisation | No PII stored persistently | No `pickle`, `shelve`, `sqlite3` in `src/` |
 | Purpose limitation | No telemetry, no metadata collection | Only HTTP call is to Ollama on localhost |

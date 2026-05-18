@@ -46,3 +46,6 @@ tests/evaluation/corpus/fr/
 tmp_tests/
 .playwright-mcp/
 packaging/hf-cache/
+assets/*
+!assets/AppIcon.icns
+scripts/generate_diagrams.py

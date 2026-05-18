@@ -61,4 +61,43 @@ codesign --verify "$APP_DIR"
 echo "  Signature OK"
 
 APP_SIZE=$(du -sh "$APP_DIR" | cut -f1)
-echo "==> Build complete: $APP_DIR ($APP_SIZE)"
+echo "==> App bundle complete: $APP_DIR ($APP_SIZE)"
+
+# --- DMG packaging ---
+VERSION=$(grep '^version' "$PROJECT_ROOT/pyproject.toml" | head -1 | sed 's/.*"\(.*\)"/\1/')
+DMG_NAME="${APP_NAME}-${VERSION}-arm64.dmg"
+DMG_STAGING="$DIST_DIR/dmg-staging"
+
+cleanup_staging() { rm -rf "$DMG_STAGING"; }
+trap cleanup_staging EXIT
+
+echo "==> Staging DMG contents..."
+rm -rf "$DMG_STAGING"
+mkdir -p "$DMG_STAGING"
+cp -Rp "$APP_DIR" "$DMG_STAGING/"
+ln -s /Applications "$DMG_STAGING/Applications"
+
+echo "==> Verifying staged app signature..."
+codesign --verify "$DMG_STAGING/${APP_NAME}.app"
+
+echo "==> Creating DMG..."
+hdiutil create \
+    -volname "$APP_NAME" \
+    -srcfolder "$DMG_STAGING" \
+    -ov \
+    -format UDZO \
+    -nospotlight \
+    -o "$DIST_DIR/$DMG_NAME"
+
+DMG_PATH="$DIST_DIR/$DMG_NAME"
+DMG_BYTES=$(stat -f%z "$DMG_PATH")
+DMG_MB=$((DMG_BYTES / 1048576))
+MAX_MB=2048
+
+if [ "$DMG_MB" -gt "$MAX_MB" ]; then
+    echo "ERROR: DMG is ${DMG_MB}MB, exceeds ${MAX_MB}MB limit."
+    exit 1
+fi
+
+DMG_SIZE=$(du -sh "$DMG_PATH" | cut -f1)
+echo "==> Build complete: $DMG_PATH ($DMG_SIZE)"
