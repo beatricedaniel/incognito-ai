@@ -411,6 +411,26 @@ main.reviewing--active {
   flex-shrink: 0;
 }
 
+.detection-list li {
+  display: flex;
+  align-items: center;
+}
+
+.detection-dismiss {
+  background: transparent;
+  border: none;
+  color: rgba(255, 252, 249, 0.15);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 0.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.detection-dismiss:hover {
+  color: #ff002b;
+}
+
 .badge-person {
   background: rgba(155, 93, 229, 0.2);
   color: #9b5de5;

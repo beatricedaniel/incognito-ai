@@ -1,8 +1,8 @@
 # incognito.ai
 
-100% local PII anonymizer for French administrative and medical PDFs.
+100% local PII anonymizer for administrative and medical PDFs.
 
-Drag a PDF in. GLiNER (PII-specialized model) spots person names and addresses, Gemma 4 E4B (running locally via Ollama) confirms person candidates, and regex catches phone numbers and email addresses. Review the highlights, dismiss false positives, click Redact. The output PDF has all confirmed PII **permanently deleted from the data layer** — not hidden behind cosmetic rectangles, but irrecoverably removed. Verify it yourself: `pdftotext redacted.pdf -` returns nothing.
+Drag a PDF into incognito. Regex and a lightweight model for Named Entity Recognition catch persons, phone numbers, email addresses and postal addresses. Gemma 4 E4B (running locally via Ollama) confirms person candidates. Review the highlights, dismiss false positives, click Redact. The output PDF has all confirmed PII **permanently deleted from the data layer** — not hidden behind cosmetic rectangles, but irrecoverably removed. Verify it yourself: `pdftotext redacted.pdf -` returns nothing.
 
 No data ever leaves your machine.
 

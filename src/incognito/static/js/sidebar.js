@@ -117,7 +117,16 @@ function renderList(detections) {
     pageSpan.textContent = "p.\u00a0" + d.page;
     btn.appendChild(pageSpan);
 
+    var dismissBtn = document.createElement("button");
+    dismissBtn.type = "button";
+    dismissBtn.className = "detection-dismiss";
+    dismissBtn.textContent = "\u00d7";
+    dismissBtn.title = "Dismiss";
+    dismissBtn.setAttribute("data-detection-id", d.id);
+    dismissBtn.setAttribute("data-entity-type", d.entity_type);
+
     li.appendChild(btn);
+    li.appendChild(dismissBtn);
     ul.appendChild(li);
   }
 
@@ -157,6 +166,54 @@ function init(sessionId) {
 
       sidebarEl.appendChild(renderSummary(detections));
       sidebarEl.appendChild(renderList(detections));
+
+      sidebarEl.addEventListener("click", function (e) {
+        var dismiss = e.target.closest(".detection-dismiss");
+        if (!dismiss) return;
+
+        var detectionId = dismiss.getAttribute("data-detection-id");
+        var entityType = dismiss.getAttribute("data-entity-type");
+
+        fetch("/api/detections/" + sessionId + "/" + detectionId, {
+          method: "DELETE",
+        }).then(function (resp) {
+          if (!resp.ok) return;
+
+          var li = dismiss.closest("li");
+          var section = li.closest("section");
+          li.remove();
+
+          if (section && section.querySelector(".detection-list").children.length === 0) {
+            section.remove();
+          }
+
+          var remaining = sidebarEl.querySelectorAll(".detection-item").length;
+          if (remaining === 0) {
+            sidebarEl.innerHTML = "";
+            var p = document.createElement("p");
+            p.className = "sidebar-empty";
+            p.textContent = "No detections found.";
+            sidebarEl.appendChild(p);
+            return;
+          }
+
+          var titleEl = sidebarEl.querySelector(".sidebar-summary-title");
+          titleEl.textContent = remaining + " detection" + (remaining !== 1 ? "s" : "");
+
+          var countItems = sidebarEl.querySelectorAll(".summary-counts li");
+          for (var i = 0; i < countItems.length; i++) {
+            if (countItems[i].querySelector(".badge-" + entityType)) {
+              var num = parseInt(countItems[i].textContent.replace(/\D/g, ""), 10) - 1;
+              if (num <= 0) {
+                countItems[i].remove();
+              } else {
+                countItems[i].lastChild.textContent = " " + num;
+              }
+              break;
+            }
+          }
+        });
+      });
     })
     .catch(function () {
       if (activeSessionId !== sessionId) return;
