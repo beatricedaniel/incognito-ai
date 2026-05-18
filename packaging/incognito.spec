@@ -12,6 +12,7 @@ a = Analysis(
     binaries=pymupdf_binaries,
     datas=[
         ("../src/incognito/static", "incognito/static"),
+        ("hf-cache", "hf-cache"),
     ],
     hiddenimports=[
         # --- uvicorn submodules (string-based imports) ---
