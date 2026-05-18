@@ -36,6 +36,8 @@ dev = [
     "import-linter",
     "cyclonedx-bom",
     "httpx",
+    "pyinstaller>=6.11",
+    "pyinstaller-hooks-contrib>=2024.10",
 ]
 
 [tool.ruff]

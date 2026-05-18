@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Final
 
@@ -39,7 +40,15 @@ ARGON2_SALT_LENGTH: Final[int] = 16
 AESGCM_NONCE_LENGTH: Final[int] = 12
 MAX_DECOMPRESSED_RECOVERY_BYTES: Final[int] = MAX_UPLOAD_BYTES * 4
 
-STATIC_DIR: Final[Path] = Path(__file__).resolve().parent.parent / "static"
+
+def _resolve_static_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        base = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+        return base / "incognito" / "static"
+    return Path(__file__).resolve().parent.parent / "static"
+
+
+STATIC_DIR: Final[Path] = _resolve_static_dir()
 
 GLINER_MODEL: Final[str] = "knowledgator/gliner-pii-large-v1.0"
 GLINER_LABELS: Final[tuple[str, ...]] = ("person", "address")
