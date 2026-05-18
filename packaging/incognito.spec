@@ -99,7 +99,7 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name="Incognito.app",
-    icon=None,
+    icon="../assets/AppIcon.icns",
     bundle_identifier="ai.incognito.app",
     info_plist={
         "CFBundleExecutable": "Incognito",

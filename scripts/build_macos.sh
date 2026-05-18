@@ -46,13 +46,6 @@ uv run pyinstaller incognito.spec \
 
 APP_DIR="$DIST_DIR/${APP_NAME}.app"
 
-# Copy icon if available
-if [ -f "$PROJECT_ROOT/assets/AppIcon.icns" ]; then
-    cp "$PROJECT_ROOT/assets/AppIcon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
-else
-    echo "  (No AppIcon.icns found in assets/, skipping icon)"
-fi
-
 echo "==> Ad-hoc code signing..."
 codesign --force --sign - "$APP_DIR"
 
